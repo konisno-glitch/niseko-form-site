@@ -80,12 +80,22 @@
   ];
 
   // ---------------------------------------------------------------- API
-  function api(action, payload) {
+  function api(action, payload, attempt) {
+    attempt = attempt || 1;
     var body = Object.assign({ action: action, k: CFG.k }, payload || {});
-    return fetch(CFG.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), redirect: 'follow' })
+    return fetch(CFG.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), redirect: 'follow', credentials: 'omit', cache: 'no-store' })
       .then(function (r) { return r.text(); })
-      .then(function (t) { try { return JSON.parse(t); } catch (e) { return { ok: false, error: 'bad_response', message: 'サーバーの応答を読めませんでした' }; } })
-      .catch(function () { return { ok: false, error: 'network', message: '通信に失敗しました。電波の良い場所で再度お試しください' }; });
+      .then(function (t) {
+        try { return JSON.parse(t); } catch (e) {
+          // Google 側が一時的に HTML を返すことがあるため 1 回だけ再試行
+          if (attempt < 2) return new Promise(function (res) { setTimeout(res, 1200); }).then(function () { return api(action, payload, attempt + 1); });
+          return { ok: false, error: 'bad_response', message: 'サーバーが混み合っています。数秒おいて、もう一度お試しください' };
+        }
+      })
+      .catch(function () {
+        if (attempt < 2) return new Promise(function (res) { setTimeout(res, 1200); }).then(function () { return api(action, payload, attempt + 1); });
+        return { ok: false, error: 'network', message: '通信に失敗しました。電波の良い場所で再度お試しください' };
+      });
   }
 
   // ---------------------------------------------------------------- 描画ユーティリティ
