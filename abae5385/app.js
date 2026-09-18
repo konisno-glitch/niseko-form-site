@@ -393,7 +393,7 @@
       busy(send, true); msg.innerHTML = '';
       var phase = state.sections.some(function (s) { return s.phase === 2; }) && state.ctx.phases.phase2.open ? '2' : '1';
       var pu = {};
-      api('saveAnswers', { p: state.token, phase: phase, answers: state.answers, base_version: state.ctx.version, summary: summaryRows(), profile_updates: pu }).then(function (r) {
+      api('saveAnswers', { p: state.token, phase: phase, answers: state.answers, base_version: state.ctx.version, summary: summaryRows(), profile_updates: pu, base_url: location.origin + location.pathname }).then(function (r) {
         busy(send, false);
         if (!r.ok) { msg.appendChild(err(r.message)); if (r.error === 'conflict') setTimeout(function () { location.reload(); }, 2500); return; }
         clearDraft(); state.ctx.version = r.version; state.ctx.answers = Object.assign({}, state.answers);
