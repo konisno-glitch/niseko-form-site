@@ -80,20 +80,22 @@
   ];
 
   // ---------------------------------------------------------------- API
+  var RETRYABLE = { ping: 1, getContext: 1, lookupSurname: 1 }; // 送信・保存は二重実行を避けるため再試行しない
   function api(action, payload, attempt) {
     attempt = attempt || 1;
+    var maxAttempt = RETRYABLE[action] ? 2 : 1;
     var body = Object.assign({ action: action, k: CFG.k }, payload || {});
     return fetch(CFG.api, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body), redirect: 'follow', credentials: 'omit', cache: 'no-store' })
       .then(function (r) { return r.text(); })
       .then(function (t) {
         try { return JSON.parse(t); } catch (e) {
           // Google 側が一時的に HTML を返すことがあるため 1 回だけ再試行
-          if (attempt < 2) return new Promise(function (res) { setTimeout(res, 1200); }).then(function () { return api(action, payload, attempt + 1); });
+          if (attempt < maxAttempt) return new Promise(function (res) { setTimeout(res, 1200); }).then(function () { return api(action, payload, attempt + 1); });
           return { ok: false, error: 'bad_response', message: 'サーバーが混み合っています。数秒おいて、もう一度お試しください' };
         }
       })
       .catch(function () {
-        if (attempt < 2) return new Promise(function (res) { setTimeout(res, 1200); }).then(function () { return api(action, payload, attempt + 1); });
+        if (attempt < maxAttempt) return new Promise(function (res) { setTimeout(res, 1200); }).then(function () { return api(action, payload, attempt + 1); });
         return { ok: false, error: 'network', message: '通信に失敗しました。電波の良い場所で再度お試しください' };
       });
   }
@@ -171,7 +173,11 @@
   }
 
   function pickCandidate(c) {
-    if (c.has_email) { requestCode({ cid: c.cid }, screenReturning); return; }
+    if (c.has_email) {
+      render(card([h('h2', null, ['認証コードをお送りしています']), h('p', null, [h('span', { class: 'spinner' }), 'ご登録のメールアドレスへ送信中です。数秒お待ちください…'])]));
+      requestCode({ cid: c.cid }, screenReturning);
+      return;
+    }
     // メール未登録 → 本人にメールを入れてもらう
     var input = h('input', { type: 'email', placeholder: 'you@example.co.jp', autocomplete: 'email' });
     var msg = h('div');
@@ -226,11 +232,19 @@
   }
 
   // ---- 認証コード
+  var sendingCode = false;
   function requestCode(payload, backFn, btn, msg) {
+    if (sendingCode) return;
+    sendingCode = true;
     busy(btn, true);
     api('sendCode', payload).then(function (r) {
+      sendingCode = false;
       busy(btn, false);
-      if (!r.ok) { if (msg) { msg.innerHTML = ''; msg.appendChild(err(r.message)); } else alert(r.message); return; }
+      if (!r.ok) {
+        if (msg) { msg.innerHTML = ''; msg.appendChild(err(r.message)); }
+        else render(card([h('h2', null, ['送信できませんでした']), err(r.message), h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: backFn }, ['戻る'])])]));
+        return;
+      }
       screenCode(r, payload, backFn);
     });
   }
@@ -249,7 +263,24 @@
       });
     } }, ['認証する']);
     input.addEventListener('input', function () { if (input.value.replace(/\D/g, '').length === 6) go.click(); });
-    var resend = h('button', { class: 'link', onclick: function () { resend.disabled = true; api('sendCode', payload).then(function (r) { msg.innerHTML = ''; msg.appendChild(r.ok ? h('p', { class: 'ok' }, ['再送しました']) : err(r.message)); if (r.ok) sent = r; }); } }, ['コードを再送する']);
+    var resendWait = 60, resendTimer = null;
+    var resend = h('button', { class: 'link', disabled: 'disabled', onclick: function () {
+      if (resend.disabled) return;
+      resend.disabled = true; resend.textContent = '再送しています…';
+      api('sendCode', payload).then(function (r) {
+        msg.innerHTML = '';
+        msg.appendChild(r.ok ? h('p', { class: 'ok' }, [r.deduped ? '先ほどお送りしたコードがまだ有効です。メールをご確認ください' : '新しいコードをお送りしました。最新のメールのコードをご入力ください']) : err(r.message));
+        if (r.ok) sent = r;
+        startResendCountdown();
+      });
+    } }, ['']);
+    function startResendCountdown() {
+      var left = resendWait; resend.disabled = true;
+      if (resendTimer) clearInterval(resendTimer);
+      var tick = function () { if (left <= 0) { clearInterval(resendTimer); resend.disabled = false; resend.textContent = 'コードを再送する'; } else { resend.textContent = 'コードの再送は ' + left + ' 秒後にできます'; left--; } };
+      tick(); resendTimer = setInterval(tick, 1000);
+    }
+    startResendCountdown();
     render(card([
       h('h2', null, ['認証コードを入力してください']),
       h('p', { class: 'muted' }, [sent.masked_email + ' 宛てに6桁のコードをお送りしました（10分間有効）。届かない場合は迷惑メールフォルダもご確認ください。']),

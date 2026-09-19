@@ -50,6 +50,7 @@ input.code { font-size: 28px; letter-spacing: .3em; text-align: center; }
 .btn.sub { flex: 0 0 auto; }
 .btn.big { display: block; width: 100%; margin-bottom: 12px; text-align: left; padding: 16px 18px; }
 .btn.big small { display: block; font-weight: 400; font-size: 14px; opacity: .85; }
+.link:disabled { color: var(--muted); text-decoration: none; cursor: default; }
 .link { background: none; border: none; color: var(--blue); text-decoration: underline; font: inherit; cursor: pointer; padding: 0; }
 .err { color: var(--err); font-size: 15px; margin: 8px 0; }
 .ok { color: var(--ok); }
