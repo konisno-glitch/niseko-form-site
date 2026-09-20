@@ -68,3 +68,12 @@ input.code { font-size: 28px; letter-spacing: .3em; text-align: center; }
 .badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 10px; background: #fff3cd; color: #7a5a00; margin-left: 6px; vertical-align: middle; }
 footer { text-align: center; color: var(--muted); font-size: 13px; padding: 12px; }
 @media (max-width: 380px) { body { font-size: 16px; } .choice { font-size: 16px; } }
+
+header { position: relative; }
+header .help { position: absolute; right: 12px; top: 12px; background: var(--white); color: var(--blue); border: none; border-radius: 18px; padding: 8px 14px; font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+header .brand, header .sub { padding-right: 110px; }
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); display: flex; align-items: flex-end; justify-content: center; z-index: 50; }
+.modal { background: var(--white); width: 100%; max-width: 640px; max-height: 92vh; overflow: auto; border-radius: 16px 16px 0 0; padding: 18px 18px 28px; }
+.modal-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.modal-head h2 { margin: 0; }
+@media (min-width: 680px) { .overlay { align-items: center; } .modal { border-radius: 16px; } }

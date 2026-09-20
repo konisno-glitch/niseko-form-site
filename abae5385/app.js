@@ -14,7 +14,9 @@
       { id: 'attendance', type: 'radio', label: 'ご参加の形態をお選びください', options: [
         { v: 'full', t: 'フル参加', d: '2/18（木）イン 〜 2/21（日）アウト' },
         { v: 'two_nights', t: '2ナイト参加', d: '2泊のみ' },
-        { v: 'undecided', t: '未定', d: '決まり次第、同じリンクから更新できます' } ] },
+        { v: 'undecided', t: '未定', d: '決まり次第、同じリンクから更新できます' },
+        { v: 'absent', t: '今回は不参加', d: 'ご予定が変われば、同じリンクから参加に変更できます' } ] },
+      { id: 'absent_note', type: 'textarea', label: '事務局へのひと言', optional: true, showIf: function (a) { return a.attendance === 'absent'; } },
       { id: 'two_nights_start', type: 'radio', label: '2ナイトの日程', showIf: function (a) { return a.attendance === 'two_nights'; }, options: [
         { v: '2027-02-18', t: '2/18（木）〜 2/20（土）' },
         { v: '2027-02-19', t: '2/19（金）〜 2/21（日）' } ] }
@@ -162,7 +164,7 @@
 
   function screenCandidates(q, cands) {
     var list = cands.map(function (c) {
-      return h('button', { class: 'choice', onclick: function () { pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, [q + ' 様', h('span', { class: 'desc' }, [c.company])])]);
+      return h('button', { class: 'choice', onclick: function () { pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, [q + ' 様', h('span', { class: 'desc' }, [c.company + (c.title ? ' ／ ' + c.title : '')])])]);
     });
     render(card([
       h('h2', null, ['ご本人の会社をお選びください']),
@@ -173,9 +175,21 @@
   }
 
   function pickCandidate(c) {
+    if (c.has_email && c.has_secretary && !c._to) {
+      render(card([
+        h('h2', null, ['認証コードの送り先']),
+        h('p', { class: 'muted' }, ['ご登録のアドレスへ6桁のコードをお送りします。受け取れる方をお選びください。']),
+        h('div', { class: 'choices' }, [
+          h('button', { class: 'choice', onclick: function () { c._to = 'self'; pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, ['ご本人のアドレスに送る'])]),
+          h('button', { class: 'choice', onclick: function () { c._to = 'secretary'; pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, ['秘書の方のアドレスに送る'])])
+        ]),
+        h('div', { class: 'actions', style: 'margin-top:14px' }, [h('button', { class: 'btn ghost sub', onclick: screenReturning }, ['戻る'])])
+      ]));
+      return;
+    }
     if (c.has_email) {
       render(card([h('h2', null, ['認証コードをお送りしています']), h('p', null, [h('span', { class: 'spinner' }), 'ご登録のメールアドレスへ送信中です。数秒お待ちください…'])]));
-      requestCode({ cid: c.cid }, screenReturning);
+      requestCode({ cid: c.cid, to: c._to === 'secretary' ? 'secretary' : undefined }, screenReturning);
       return;
     }
     // メール未登録 → 本人にメールを入れてもらう
@@ -240,6 +254,7 @@
     api('sendCode', payload).then(function (r) {
       sendingCode = false;
       busy(btn, false);
+      if (!r.ok && r.error === 'maybe_existing') { screenMaybeExisting(r.candidates, payload, backFn); return; }
       if (!r.ok) {
         if (msg) { msg.innerHTML = ''; msg.appendChild(err(r.message)); }
         else render(card([h('h2', null, ['送信できませんでした']), err(r.message), h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: backFn }, ['戻る'])])]));
@@ -247,6 +262,21 @@
       }
       screenCode(r, payload, backFn);
     });
+  }
+
+  function screenMaybeExisting(cands, payload, backFn) {
+    var name = (payload.newProfile && payload.newProfile.name) || '';
+    render(card([
+      h('h2', null, ['昨年ご参加の方ではありませんか']),
+      h('p', { class: 'muted' }, ['同じお名前の方が、昨年の参加者名簿にいらっしゃいます。ご本人でしたら会社名をお選びください。']),
+      h('div', { class: 'choices' }, cands.map(function (c) {
+        return h('button', { class: 'choice', onclick: function () { pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, [name + ' 様', h('span', { class: 'desc' }, [c.company + (c.title ? ' ／ ' + c.title : '')])])]);
+      })),
+      h('div', { class: 'actions', style: 'margin-top:14px' }, [
+        h('button', { class: 'btn ghost sub', onclick: backFn }, ['戻る']),
+        h('button', { class: 'btn ghost', onclick: function () { payload.force_new = true; render(card([h('p', null, [h('span', { class: 'spinner' }), '送信中です…'])])); requestCode(payload, backFn); } }, ['いいえ、初めての参加です'])
+      ])
+    ]));
   }
 
   function screenCode(sent, payload, backFn) {
@@ -286,7 +316,8 @@
       h('p', { class: 'muted' }, [sent.masked_email + ' 宛てに6桁のコードをお送りしました（10分間有効）。届かない場合は迷惑メールフォルダもご確認ください。']),
       h('div', { class: 'q' }, [input]), msg,
       h('div', { class: 'actions' }, [h('button', { class: 'btn ghost sub', onclick: backFn }, ['戻る']), go]),
-      h('p', { style: 'margin-top:14px' }, [resend])
+      h('p', { style: 'margin-top:14px' }, [resend]),
+      h('p', { class: 'muted' }, ['コードを受け取れない場合は ', h('button', { class: 'link', onclick: function () { openContact('認証コードを受け取れません。（' + sent.masked_email + ' 宛て）'); } }, ['事務局に連絡']), ' してください。'])
     ]));
     setTimeout(function () { input.focus(); }, 50);
   }
@@ -296,8 +327,10 @@
     render(card([h('p', null, [h('span', { class: 'spinner' }), '読み込み中…'])]));
     api('getContext', { p: state.token }).then(function (r) {
       if (!r.ok) { render(card([h('h2', null, ['リンクを確認できません']), h('p', null, [r.message]), h('button', { class: 'btn ghost', onclick: function () { location.href = location.pathname; } }, ['最初から登録する'])])); return; }
-      state.ctx = r;
+      state.ctx = r; state.profileUpdates = {};
+      if (r.pending) { screenPending(); return; }
       state.answers = Object.assign({}, r.answers || {});
+      if (r.server_draft) state.answers = Object.assign({}, state.answers, r.server_draft); // 引き継ぎ時に預かった入力途中の内容
       var draft = loadDraft();
       if (draft && Object.keys(draft).length) state.answers = Object.assign({}, state.answers, draft);
       state.sections = SECTIONS.filter(function (s) { var ph = r.phases['phase' + s.phase]; return ph && ph.open; });
@@ -305,9 +338,21 @@
     });
   }
 
-  function profileBox() {
+  function screenPending() {
     var pr = state.ctx.profile;
-    return h('div', { class: 'profile' }, [h('div', { class: 'name' }, [pr.name + ' 様']), h('div', null, [pr.company]), h('div', { class: 'muted' }, [pr.title || ''])]);
+    render(card([
+      h('h2', null, [pr.status === '却下' ? 'ご登録について' : 'お申し込みを受け付けました']),
+      profileBox(),
+      pr.status === '却下'
+        ? h('p', null, ['恐れ入りますが、事務局までお問い合わせください。'])
+        : h('p', null, ['ただいま事務局で確認しています。確認が済みましたら、ご登録用のリンクをメールでお送りします。いましばらくお待ちください。']),
+      h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: function () { openContact(''); } }, ['事務局に連絡する'])])
+    ]));
+  }
+
+  function profileBox() {
+    var pr = state.ctx.profile, u = state.profileUpdates || {};
+    return h('div', { class: 'profile' }, [h('div', { class: 'name' }, [(u['氏名'] || pr.name) + ' 様']), h('div', null, [u['会社'] !== undefined ? u['会社'] : pr.company]), h('div', { class: 'muted' }, [(u['役職'] !== undefined ? u['役職'] : pr.title) || ''])]);
   }
 
   function screenProfile() {
@@ -328,42 +373,72 @@
       kids.push(h('div', { class: 'actions' }, [
         h('button', { class: 'btn primary', onclick: function () { state.stepIdx = 0; if (hasAnswer) screenReview(); else screenStep(); } }, [hasAnswer ? '内容を確認する' : '登録をはじめる'])
       ]));
+      kids.push(h('p', { style: 'margin-top:14px' }, [h('button', { class: 'link', onclick: screenEditProfile }, ['会社名・役職が変わった方はこちらで修正'])]));
+      if (ctx.server_draft) kids.push(h('p', { class: 'muted' }, ['入力途中の内容が保存されています。続きからご入力いただけます。']));
       kids.push(h('p', { class: 'muted', style: 'margin-top:14px' }, ['ご本人ではない場合は ', h('button', { class: 'link', onclick: function () { location.href = location.pathname; } }, ['こちら']), ' から登録してください。']));
     }
     render(card(kids));
   }
 
+  function screenEditProfile() {
+    var pr = state.ctx.profile, u = state.profileUpdates || {};
+    var f = { name: h('input', { type: 'text' }), company: h('input', { type: 'text' }), title: h('input', { type: 'text' }) };
+    f.name.value = u['氏名'] || pr.name || ''; f.company.value = u['会社'] !== undefined ? u['会社'] : (pr.company || ''); f.title.value = u['役職'] !== undefined ? u['役職'] : (pr.title || '');
+    var row = function (label, el) { return h('div', { class: 'q' }, [h('label', { class: 'label' }, [label]), el]); };
+    render(card([
+      h('h2', null, ['お名前・会社名・役職の修正']),
+      h('p', { class: 'muted' }, ['修正した内容は、登録の送信時に反映されます。']),
+      row('お名前', f.name), row('会社名', f.company), row('役職', f.title),
+      h('div', { class: 'actions' }, [
+        h('button', { class: 'btn ghost sub', onclick: screenProfile }, ['戻る']),
+        h('button', { class: 'btn primary', onclick: function () {
+          var n = {};
+          if (f.name.value.trim() && f.name.value.trim() !== pr.name) n['氏名'] = f.name.value.trim();
+          if (f.company.value.trim() !== (pr.company || '')) n['会社'] = f.company.value.trim();
+          if (f.title.value.trim() !== (pr.title || '')) n['役職'] = f.title.value.trim();
+          state.profileUpdates = n; screenProfile();
+        } }, ['この内容にする'])
+      ])
+    ]));
+  }
+
   // ---- 設問ステップ
   function visibleQuestions(sec) { return sec.questions.filter(function (q) { return !q.showIf || q.showIf(state.answers); }); }
 
+  // 表示するセクション（「今回は不参加」なら日程だけ）
+  function secs() { return state.sections.filter(function (x) { return x.id === 'attendance' || state.answers.attendance !== 'absent'; }); }
+
   function screenStep() {
-    var sec = state.sections[state.stepIdx];
+    var sec = secs()[state.stepIdx];
     var body = h('div');
     var msg = h('div');
     function draw() {
       body.innerHTML = '';
       if (sec.intro) body.appendChild(h('p', { class: 'muted' }, [sec.intro]));
       visibleQuestions(sec).forEach(function (q) { body.appendChild(renderQuestion(q, draw)); });
+      if (next) next.textContent = state.stepIdx + 1 < secs().length ? '次へ' : '確認へ';
     }
-    draw();
-    var next = h('button', { class: 'btn primary', onclick: function () {
+    var next = null;
+    next = h('button', { class: 'btn primary', onclick: function () {
       var missing = visibleQuestions(sec).filter(function (q) { return !q.optional && isEmpty(state.answers[q.id]); });
       msg.innerHTML = '';
-      if (missing.length) { msg.appendChild(err('「' + missing[0].label + '」をお選びください')); return; }
+      if (missing.length) { msg.appendChild(err('「' + missing[0].label + '」を' + (missing[0].options ? 'お選び' : 'ご入力') + 'ください')); return; }
       var bad = visibleQuestions(sec).filter(function (q) { return q.type === 'email' && state.answers[q.id] && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.answers[q.id]); });
       if (bad.length) { msg.appendChild(err('メールアドレスの形式をご確認ください')); return; }
       saveDraft();
-      if (state.stepIdx + 1 < state.sections.length) { state.stepIdx++; screenStep(); } else screenReview();
-    } }, [state.stepIdx + 1 < state.sections.length ? '次へ' : '確認へ']);
+      if (state.stepIdx + 1 < secs().length) { state.stepIdx++; screenStep(); } else screenReview();
+    } }, [state.stepIdx + 1 < secs().length ? '次へ' : '確認へ']);
+    draw();
     var back = h('button', { class: 'btn ghost sub', onclick: function () { saveDraft(); if (state.stepIdx === 0) screenProfile(); else { state.stepIdx--; screenStep(); } } }, ['戻る']);
     render(card([
       progress(), h('h2', null, [sec.title + (sec.phase === 2 ? ' ' : '')]), body, msg,
-      h('div', { class: 'actions' }, [back, next])
+      h('div', { class: 'actions' }, [back, next]),
+      h('p', { class: 'muted', style: 'margin-top:16px' }, [h('button', { class: 'link', onclick: openHandoff }, ['秘書の方に入力を引き継ぐ'])])
     ]));
   }
 
   function progress() {
-    return h('div', { class: 'progress' }, state.sections.map(function (s, i) { return h('span', { class: i < state.stepIdx ? 'done' : (i === state.stepIdx ? 'cur' : '') }); }));
+    return h('div', { class: 'progress' }, secs().map(function (s, i) { return h('span', { class: i < state.stepIdx ? 'done' : (i === state.stepIdx ? 'cur' : '') }); }));
   }
 
   function renderQuestion(q, redraw) {
@@ -409,12 +484,12 @@
   }
   function summaryRows() {
     var rows = [];
-    state.sections.forEach(function (sec) { visibleQuestions(sec).forEach(function (q) { var v = labelOf(q, state.answers[q.id]); if (v) rows.push({ label: q.label, value: v }); }); });
+    secs().forEach(function (sec) { visibleQuestions(sec).forEach(function (q) { var v = labelOf(q, state.answers[q.id]); if (v) rows.push({ label: q.label, value: v }); }); });
     return rows;
   }
   function reviewList(editable) {
     var el = h('div', { class: 'review' });
-    state.sections.forEach(function (sec, i) {
+    secs().forEach(function (sec, i) {
       var head = h('div', { class: 'sec' }, [h('h3', null, [sec.title]), editable ? h('button', { class: 'link', onclick: function () { state.stepIdx = i; screenStep(); } }, ['変更']) : null]);
       var dl = h('dl');
       visibleQuestions(sec).forEach(function (q) { var v = labelOf(q, state.answers[q.id]); dl.appendChild(h('dt', null, [q.label])); dl.appendChild(h('dd', null, [v || '（未回答）'])); });
@@ -427,29 +502,32 @@
     var msg = h('div');
     var send = h('button', { class: 'btn primary', onclick: function () {
       // 必須チェック（全セクション）
-      for (var i = 0; i < state.sections.length; i++) {
-        var miss = visibleQuestions(state.sections[i]).filter(function (q) { return !q.optional && isEmpty(state.answers[q.id]); });
+      for (var i = 0; i < secs().length; i++) {
+        var miss = visibleQuestions(secs()[i]).filter(function (q) { return !q.optional && isEmpty(state.answers[q.id]); });
         if (miss.length) { state.stepIdx = i; screenStep(); return; }
       }
       busy(send, true); msg.innerHTML = '';
-      var phase = state.sections.some(function (s) { return s.phase === 2; }) && state.ctx.phases.phase2.open ? '2' : '1';
-      var pu = {};
+      var phase = secs().some(function (s) { return s.phase === 2; }) && state.ctx.phases.phase2.open ? '2' : '1';
+      var pu = state.profileUpdates || {};
       api('saveAnswers', { p: state.token, phase: phase, answers: state.answers, base_version: state.ctx.version, summary: summaryRows(), profile_updates: pu, base_url: location.origin + location.pathname }).then(function (r) {
         busy(send, false);
         if (!r.ok) { msg.appendChild(err(r.message)); if (r.error === 'conflict') setTimeout(function () { location.reload(); }, 2500); return; }
-        clearDraft(); state.ctx.version = r.version; state.ctx.answers = Object.assign({}, state.answers);
+        clearDraft(); state.ctx.version = r.version; state.ctx.server_draft = null;
+        if (pu['氏名']) state.ctx.profile.name = pu['氏名']; if (pu['会社'] !== undefined) state.ctx.profile.company = pu['会社']; if (pu['役職'] !== undefined) state.ctx.profile.title = pu['役職']; state.profileUpdates = {}; state.ctx.answers = Object.assign({}, state.answers);
         screenDone(r);
       });
     } }, [state.ctx.version > 0 ? '変更を送信する' : '登録する']);
     render(card([
       h('h2', null, ['内容をご確認ください']), profileBox(), reviewList(true), msg,
-      h('div', { class: 'actions', style: 'margin-top:18px' }, [h('button', { class: 'btn ghost sub', onclick: function () { state.stepIdx = state.sections.length - 1; screenStep(); } }, ['戻る']), send])
+      h('div', { class: 'actions', style: 'margin-top:18px' }, [h('button', { class: 'btn ghost sub', onclick: function () { state.stepIdx = secs().length - 1; screenStep(); } }, ['戻る']), send])
     ]));
   }
 
   function screenDone(r) {
     var ev = state.ctx.event, a = state.answers;
-    var kids = [h('h2', null, [r.unchanged ? '変更はありませんでした' : (r.version > 1 ? '変更を受け付けました' : 'ご登録ありがとうございました')])];
+    var absent = a.attendance === 'absent';
+    var kids = [h('h2', null, [r.unchanged ? '変更はありませんでした' : (absent ? 'ご回答ありがとうございました' : (r.version > 1 ? '変更を受け付けました' : 'ご登録ありがとうございました'))])];
+    if (absent && !r.unchanged) kids.push(h('p', null, ['「今回は不参加」として承りました。']));
     if (r.mailed) kids.push(h('p', null, ['確認メールを ' + r.mailed_to + ' 宛てにお送りしました。']));
     else if (!r.unchanged) kids.push(h('p', { class: 'muted' }, ['メールアドレスが未登録のため確認メールは送られません。このページの内容を控えてください。']));
     var d = dates(a, ev);
@@ -464,6 +542,64 @@
     kids.push(h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: screenProfile }, ['登録内容を見る'])]));
     render(card(kids));
   }
+
+  // ---- モーダル（事務局に連絡／秘書へ引き継ぐ）
+  function modal(title, bodyNodes) {
+    var ov = h('div', { class: 'overlay' });
+    var close = function () { if (ov.parentNode) ov.parentNode.removeChild(ov); };
+    var box = h('div', { class: 'modal', role: 'dialog', 'aria-label': title }, [h('div', { class: 'modal-head' }, [h('h2', null, [title]), h('button', { class: 'link', onclick: close }, ['閉じる'])])].concat(bodyNodes(close)));
+    ov.appendChild(box); ov.addEventListener('click', function (e) { if (e.target === ov) close(); });
+    document.body.appendChild(ov);
+  }
+
+  function openContact(prefill) {
+    var pr = state.ctx && state.ctx.profile;
+    modal('事務局に連絡', function (close) {
+      var f = { name: h('input', { type: 'text', placeholder: '例：山田 太郎', autocomplete: 'name' }), company: h('input', { type: 'text', placeholder: '例：株式会社〇〇' }),
+        reply: h('input', { type: 'text', placeholder: 'メールアドレスまたはお電話番号' }), message: h('textarea', { placeholder: 'お困りの内容・ご質問をお書きください' }) };
+      if (pr) { f.name.value = pr.name || ''; f.company.value = pr.company || ''; }
+      f.message.value = prefill || '';
+      var msg = h('div');
+      var row = function (label, el) { return h('div', { class: 'q' }, [h('label', { class: 'label' }, [label]), el]); };
+      var send = h('button', { class: 'btn primary', onclick: function () {
+        msg.innerHTML = '';
+        if (!f.name.value.trim() || !f.reply.value.trim() || !f.message.value.trim()) { msg.appendChild(err('お名前・ご連絡先・内容をご入力ください')); return; }
+        busy(send, true);
+        var h2 = document.querySelector('#app h2, #app h1');
+        api('contact', { p: state.token || '', name: f.name.value.trim(), company: f.company.value.trim(), reply_to: f.reply.value.trim(), message: f.message.value.trim(), screen: h2 ? h2.textContent : '' }).then(function (r) {
+          busy(send, false);
+          if (!r.ok) { msg.appendChild(err(r.message)); return; }
+          box.innerHTML = ''; box.appendChild(h('p', { class: 'ok' }, ['事務局へお送りしました（受付番号 ' + r.id + '）。担当者より折り返しご連絡いたします。'])); box.appendChild(h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: close }, ['閉じる'])]));
+        });
+      } }, ['送信する']);
+      var box = h('div', null, [h('p', { class: 'muted' }, ['事務局の担当者より、メールまたはお電話で折り返しご連絡します。']), row('お名前', f.name), row('会社名', f.company), row('ご連絡先', f.reply), row('内容', f.message), msg, h('div', { class: 'actions' }, [send])]);
+      return [box];
+    });
+  }
+
+  function openHandoff() {
+    saveDraft();
+    modal('秘書の方に引き継ぐ', function (close) {
+      var f = { name: h('input', { type: 'text', placeholder: '例：鈴木' }), email: h('input', { type: 'email', placeholder: 'hisho@example.co.jp', autocomplete: 'off' }) };
+      f.name.value = state.answers.secretary_name || ''; f.email.value = state.answers.secretary_email || '';
+      var msg = h('div');
+      var row = function (label, el, opt) { return h('div', { class: 'q' }, [h('label', { class: 'label' }, [label, opt ? h('span', { class: 'opt' }, ['任意']) : null]), el]); };
+      var send = h('button', { class: 'btn primary', onclick: function () {
+        msg.innerHTML = '';
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.value.trim())) { msg.appendChild(err('秘書の方のメールアドレスをご確認ください')); return; }
+        busy(send, true);
+        api('handoff', { p: state.token, answers: state.answers, secretary_name: f.name.value.trim(), secretary_email: f.email.value.trim(), base_url: location.origin + location.pathname }).then(function (r) {
+          busy(send, false);
+          if (!r.ok) { msg.appendChild(err(r.message)); return; }
+          state.answers.contact_via = 'secretary'; state.answers.secretary_name = f.name.value.trim(); state.answers.secretary_email = f.email.value.trim(); saveDraft();
+          box.innerHTML = ''; box.appendChild(h('p', { class: 'ok' }, [r.sent_to + ' 宛てに、続きを入力するためのリンクをお送りしました。ここまでの入力内容は保存されています。このまま画面を閉じていただいて構いません。'])); box.appendChild(h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: close }, ['閉じる'])]));
+        });
+      } }, ['リンクを送る']);
+      var box = h('div', null, [h('p', { class: 'muted' }, ['ここまでの入力内容を保存し、秘書の方へ続きを入力するためのリンクをメールでお送りします。']), row('秘書の方のお名前', f.name, true), row('秘書の方のメールアドレス', f.email), msg, h('div', { class: 'actions' }, [send])]);
+      return [box];
+    });
+  }
+  window.nisekoOpenContact = function () { openContact(''); };
 
   // ---- カレンダー
   function dates(a, ev) {
