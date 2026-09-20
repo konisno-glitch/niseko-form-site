@@ -368,14 +368,14 @@
     } else {
       kids.unshift(h('h2', null, [hasAnswer ? 'ご登録内容の確認・変更' : 'ご本人の確認']));
       var newlyOpened = state.sections.filter(function (s) { return s.phase === 2 && !(ctx.phase_done && ctx.phase_done.phase2); });
-      kids.push(h('p', { class: 'muted' }, [hasAnswer ? '前回のご回答が入っています。変更したい項目だけ直してください。' : '上記がご本人であれば「登録をはじめる」を押してください。']));
+      kids.push(h('p', { class: 'muted' }, [hasAnswer ? '前回のご回答が入っています。変更したい項目だけ直してください。' : '上記の方のご登録でしたら「登録をはじめる」を押してください。秘書の方が代わりにご入力いただいても構いません。']));
       if (hasAnswer && newlyOpened.length) kids.push(h('p', null, ['新しい項目「' + newlyOpened.map(function (s) { return s.title; }).join('・') + '」が追加されています。']));
       kids.push(h('div', { class: 'actions' }, [
         h('button', { class: 'btn primary', onclick: function () { state.stepIdx = 0; if (hasAnswer) screenReview(); else screenStep(); } }, [hasAnswer ? '内容を確認する' : '登録をはじめる'])
       ]));
       kids.push(h('p', { style: 'margin-top:14px' }, [h('button', { class: 'link', onclick: screenEditProfile }, ['会社名・役職が変わった方はこちらで修正'])]));
       if (ctx.server_draft) kids.push(h('p', { class: 'muted' }, ['入力途中の内容が保存されています。続きからご入力いただけます。']));
-      kids.push(h('p', { class: 'muted', style: 'margin-top:14px' }, ['ご本人ではない場合は ', h('button', { class: 'link', onclick: function () { location.href = location.pathname; } }, ['こちら']), ' から登録してください。']));
+      kids.push(h('p', { class: 'muted', style: 'margin-top:14px' }, ['別の方の登録をする場合は ', h('button', { class: 'link', onclick: function () { location.href = location.pathname; } }, ['こちら']), ' から登録してください。']));
     }
     render(card(kids));
   }
