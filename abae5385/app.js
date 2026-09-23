@@ -531,8 +531,8 @@
     var kids = [h('h2', null, [r.unchanged ? '変更はありませんでした' : (absent ? 'ご回答ありがとうございました' : (r.version > 1 ? '変更を受け付けました' : 'ご登録ありがとうございました'))])];
     if (absent && !r.unchanged) kids.push(h('p', null, ['「今回は不参加」として承りました。']));
     if (r.mailed) kids.push(h('p', null, ['確認メールを ' + r.mailed_to + ' 宛てにお送りしました。']));
-    if (r.rejected && r.rejected.length) kids.push(h('p', { class: 'err' }, ['締切を過ぎた項目（' + r.rejected.length + '件）は変更されていません。変更が必要な場合は事務局へご連絡ください。']));
     else if (!r.unchanged) kids.push(h('p', { class: 'muted' }, ['メールアドレスが未登録のため確認メールは送られません。このページの内容を控えてください。']));
+    if (r.rejected && r.rejected.length) kids.push(h('p', { class: 'err' }, ['締切を過ぎた項目（' + r.rejected.length + '件）は変更されていません。変更が必要な場合は事務局へご連絡ください。']));
     var d = dates(a, ev);
     if (d) {
       kids.push(h('p', { style: 'margin-top:14px' }, [h('b', null, ['カレンダーに追加'])]));
