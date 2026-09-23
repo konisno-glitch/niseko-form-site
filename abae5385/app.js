@@ -175,35 +175,39 @@
   }
 
   function pickCandidate(c) {
-    if (c.has_email && c.has_secretary && !c._to) {
+    if (!c._who) {
       render(card([
-        h('h2', null, ['認証コードの送り先']),
-        h('p', { class: 'muted' }, ['ご登録のアドレスへ6桁のコードをお送りします。受け取れる方をお選びください。']),
+        h('h2', null, ['どなたがご入力されますか']),
+        h('p', { class: 'muted' }, ['6桁の認証コードをメールでお送りします。秘書の方はご本人と同じように登録・変更ができます。']),
         h('div', { class: 'choices' }, [
-          h('button', { class: 'choice', onclick: function () { c._to = 'self'; pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, ['ご本人のアドレスに送る'])]),
-          h('button', { class: 'choice', onclick: function () { c._to = 'secretary'; pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, ['秘書の方のアドレスに送る'])])
+          h('button', { class: 'choice', onclick: function () { c._who = 'self'; pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, ['ご本人', h('span', { class: 'desc' }, [c.has_email ? 'ご登録のメールアドレスにコードを送ります' : 'メールアドレスをご入力いただきます'])])]),
+          h('button', { class: 'choice', onclick: function () { c._who = 'secretary'; pickCandidate(c); } }, [h('span', { class: 'mark' }), h('span', { class: 'txt' }, ['秘書・代理の方', h('span', { class: 'desc' }, [c.has_secretary ? 'ご登録の秘書の方のアドレスにコードを送ります' : '秘書の方のメールアドレスをご入力いただきます'])])])
         ]),
         h('div', { class: 'actions', style: 'margin-top:14px' }, [h('button', { class: 'btn ghost sub', onclick: screenReturning }, ['戻る'])])
       ]));
       return;
     }
-    if (c.has_email) {
+    var sec = c._who === 'secretary';
+    if ((sec && c.has_secretary) || (!sec && c.has_email)) {
       render(card([h('h2', null, ['認証コードをお送りしています']), h('p', null, [h('span', { class: 'spinner' }), 'ご登録のメールアドレスへ送信中です。数秒お待ちください…'])]));
-      requestCode({ cid: c.cid, to: c._to === 'secretary' ? 'secretary' : undefined }, screenReturning);
+      requestCode({ cid: c.cid, to: sec ? 'secretary' : undefined }, function () { c._who = null; pickCandidate(c); });
       return;
     }
-    // メール未登録 → 本人にメールを入れてもらう
+    // アドレス未登録 → 入力してもらう（秘書は名前も）
+    var name = h('input', { type: 'text', placeholder: '例：鈴木', autocomplete: 'name' });
     var input = h('input', { type: 'email', placeholder: 'you@example.co.jp', autocomplete: 'email' });
     var msg = h('div');
     var go = h('button', { class: 'btn primary', onclick: function () {
       var e = input.value.trim(); if (!e) return;
-      requestCode({ cid: c.cid, email: e }, screenReturning, go, msg);
+      requestCode(sec ? { cid: c.cid, to: 'secretary', email: e, secretary_name: name.value.trim() } : { cid: c.cid, email: e }, function () { c._who = null; pickCandidate(c); }, go, msg);
     } }, ['認証コードを送る']);
+    var row = function (label, el) { return h('div', { class: 'q' }, [h('label', { class: 'label' }, [label]), el]); };
     render(card([
-      h('h2', null, ['メールアドレスをご登録ください']),
-      h('p', { class: 'muted' }, ['ご登録のメールアドレスが事務局にありません。ご本人のメールアドレスをご入力ください。認証コードをお送りします。']),
-      h('div', { class: 'q' }, [input]), msg,
-      h('div', { class: 'actions' }, [h('button', { class: 'btn ghost sub', onclick: screenReturning }, ['戻る']), go])
+      h('h2', null, [sec ? '秘書の方のメールアドレス' : 'メールアドレスをご登録ください']),
+      h('p', { class: 'muted' }, [sec ? 'ご入力のアドレスに認証コードをお送りします。ご本人には、秘書の方が登録を始めた旨をメールでお知らせします。' : 'ご登録のメールアドレスが事務局にありません。ご本人のメールアドレスをご入力ください。認証コードをお送りします。']),
+      sec ? row('秘書の方のお名前', name) : null,
+      row('メールアドレス', input), msg,
+      h('div', { class: 'actions' }, [h('button', { class: 'btn ghost sub', onclick: function () { c._who = null; pickCandidate(c); } }, ['戻る']), go])
     ]));
   }
 
@@ -288,36 +292,39 @@
       api('verifyCode', { code_id: sent.code_id, code: code }).then(function (r) {
         busy(go, false);
         if (!r.ok) { msg.appendChild(err(r.message)); return; }
+        stopTimer();
         history.replaceState(null, '', location.pathname + '?p=' + r.p);
         state.token = r.p; loadContext();
       });
     } }, ['認証する']);
     input.addEventListener('input', function () { if (input.value.replace(/\D/g, '').length === 6) go.click(); });
-    var resendWait = 60, resendTimer = null;
-    var resend = h('button', { class: 'link', disabled: 'disabled', onclick: function () {
-      if (resend.disabled) return;
-      resend.disabled = true; resend.textContent = '再送しています…';
-      api('sendCode', payload).then(function (r) {
-        msg.innerHTML = '';
-        msg.appendChild(r.ok ? h('p', { class: 'ok' }, [r.deduped ? '先ほどお送りしたコードがまだ有効です。メールをご確認ください' : '新しいコードをお送りしました。最新のメールのコードをご入力ください']) : err(r.message));
-        if (r.ok) sent = r;
-        startResendCountdown();
-      });
-    } }, ['']);
-    function startResendCountdown() {
-      var left = resendWait; resend.disabled = true;
-      if (resendTimer) clearInterval(resendTimer);
-      var tick = function () { if (left <= 0) { clearInterval(resendTimer); resend.disabled = false; resend.textContent = 'コードを再送する'; } else { resend.textContent = 'コードの再送は ' + left + ' 秒後にできます'; left--; } };
-      tick(); resendTimer = setInterval(tick, 1000);
+    // 60秒待って届かなければ、再送か事務局連絡へ
+    var wait = h('p', { class: 'muted' }, ['通常は1分以内に届きます。届かない場合は迷惑メールフォルダもご確認ください。']);
+    var late = h('div', { style: 'display:none' }, [
+      h('p', { class: 'err' }, ['まだ届いていませんか？']),
+      h('div', { class: 'actions' }, [
+        h('button', { class: 'btn ghost', onclick: function () {
+          render(card([h('h2', null, ['認証コードを再送しています']), h('p', null, [h('span', { class: 'spinner' }), '数秒お待ちください…'])]));
+          api('sendCode', payload).then(function (r) { if (!r.ok) { render(card([h('h2', null, ['送信できませんでした']), err(r.message), h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: backFn }, ['戻る'])])])); return; } screenCode(r, payload, backFn); });
+        } }, ['もう一度送る']),
+        h('button', { class: 'btn ghost', onclick: function () { openContact('認証コードが届きません（' + sent.masked_email + ' 宛て）。'); } }, ['事務局に連絡'])
+      ]),
+      h('p', { class: 'muted' }, ['遅れて届いたコードも、10分以内であればそのまま使えます。'])
+    ]);
+    var left = 60, timer = null;
+    var count = h('span', null, ['']);
+    function stopTimer() { if (timer) clearInterval(timer); timer = null; }
+    function tick() {
+      if (left <= 0) { stopTimer(); wait.style.display = 'none'; late.style.display = ''; return; }
+      count.textContent = '（あと ' + left + ' 秒お待ちください）'; left--;
     }
-    startResendCountdown();
+    wait.appendChild(count); tick(); timer = setInterval(tick, 1000);
     render(card([
       h('h2', null, ['認証コードを入力してください']),
-      h('p', { class: 'muted' }, [sent.masked_email + ' 宛てに6桁のコードをお送りしました（10分間有効）。届かない場合は迷惑メールフォルダもご確認ください。']),
+      h('p', null, [sent.masked_email + ' 宛てに6桁のコードをお送りしました。' + (sent.deduped ? '（先ほどのコードがそのまま使えます）' : '')]),
       h('div', { class: 'q' }, [input]), msg,
-      h('div', { class: 'actions' }, [h('button', { class: 'btn ghost sub', onclick: backFn }, ['戻る']), go]),
-      h('p', { style: 'margin-top:14px' }, [resend]),
-      h('p', { class: 'muted' }, ['コードを受け取れない場合は ', h('button', { class: 'link', onclick: function () { openContact('認証コードを受け取れません。（' + sent.masked_email + ' 宛て）'); } }, ['事務局に連絡']), ' してください。'])
+      h('div', { class: 'actions' }, [h('button', { class: 'btn ghost sub', onclick: function () { stopTimer(); backFn(); } }, ['戻る']), go]),
+      wait, late
     ]));
     setTimeout(function () { input.focus(); }, 50);
   }
@@ -330,7 +337,7 @@
       state.ctx = r; state.profileUpdates = {};
       if (r.pending) { screenPending(); return; }
       state.answers = Object.assign({}, r.answers || {});
-      if (r.server_draft) state.answers = Object.assign({}, state.answers, r.server_draft); // 引き継ぎ時に預かった入力途中の内容
+      if (r.server_draft && Number(r.server_draft.base_version) === Number(r.version || 0)) state.answers = Object.assign({}, state.answers, r.server_draft.answers); // 別の端末で入力途中の内容
       var draft = loadDraft();
       if (draft && Object.keys(draft).length) state.answers = Object.assign({}, state.answers, draft);
       state.sections = SECTIONS.filter(function (s) { var ph = r.phases['phase' + s.phase]; return ph && ph.open; });
@@ -368,7 +375,7 @@
     } else {
       kids.unshift(h('h2', null, [hasAnswer ? 'ご登録内容の確認・変更' : 'ご本人の確認']));
       var newlyOpened = state.sections.filter(function (s) { return s.phase === 2 && !(ctx.phase_done && ctx.phase_done.phase2); });
-      kids.push(h('p', { class: 'muted' }, [hasAnswer ? '前回のご回答が入っています。変更したい項目だけ直してください。' : '上記の方のご登録でしたら「登録をはじめる」を押してください。秘書の方が代わりにご入力いただいても構いません。']));
+      kids.push(h('p', { class: 'muted' }, [hasAnswer ? '前回のご回答が入っています。変更したい項目だけ直してください。' : '上記の方のご登録でしたら「登録をはじめる」を押してください。秘書の方も、ご本人と同じように登録・変更ができます。']));
       if (hasAnswer && newlyOpened.length) kids.push(h('p', null, ['新しい項目「' + newlyOpened.map(function (s) { return s.title; }).join('・') + '」が追加されています。']));
       kids.push(h('div', { class: 'actions' }, [
         h('button', { class: 'btn primary', onclick: function () { state.stepIdx = 0; if (hasAnswer) screenReview(); else screenStep(); } }, [hasAnswer ? '内容を確認する' : '登録をはじめる'])
@@ -425,15 +432,14 @@
       if (missing.length) { msg.appendChild(err('「' + missing[0].label + '」を' + (missing[0].options ? 'お選び' : 'ご入力') + 'ください')); return; }
       var bad = visibleQuestions(sec).filter(function (q) { return q.type === 'email' && state.answers[q.id] && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(state.answers[q.id]); });
       if (bad.length) { msg.appendChild(err('メールアドレスの形式をご確認ください')); return; }
-      saveDraft();
+      saveDraft(); saveServerDraft();
       if (state.stepIdx + 1 < secs().length) { state.stepIdx++; screenStep(); } else screenReview();
     } }, [state.stepIdx + 1 < secs().length ? '次へ' : '確認へ']);
     draw();
     var back = h('button', { class: 'btn ghost sub', onclick: function () { saveDraft(); if (state.stepIdx === 0) screenProfile(); else { state.stepIdx--; screenStep(); } } }, ['戻る']);
     render(card([
       progress(), h('h2', null, [sec.title + (sec.phase === 2 ? ' ' : '')]), body, msg,
-      h('div', { class: 'actions' }, [back, next]),
-      h('p', { class: 'muted', style: 'margin-top:16px' }, [h('button', { class: 'link', onclick: openHandoff }, ['秘書の方に入力を引き継ぐ'])])
+      h('div', { class: 'actions' }, [back, next])
     ]));
   }
 
@@ -484,7 +490,7 @@
   }
   function summaryRows() {
     var rows = [];
-    secs().forEach(function (sec) { visibleQuestions(sec).forEach(function (q) { var v = labelOf(q, state.answers[q.id]); if (v) rows.push({ label: q.label, value: v }); }); });
+    secs().forEach(function (sec) { visibleQuestions(sec).forEach(function (q) { var v = labelOf(q, state.answers[q.id]); if (v) rows.push({ key: q.id, label: q.label, value: v }); }); });
     return rows;
   }
   function reviewList(editable) {
@@ -518,7 +524,7 @@
       });
     } }, [state.ctx.version > 0 ? '変更を送信する' : '登録する']);
     render(card([
-      h('h2', null, ['内容をご確認ください']), profileBox(), reviewList(true), msg,
+      h('h2', null, ['内容をご確認ください']), h('p', { class: 'err' }, ['まだ登録は完了していません。内容を確認して、下の「' + (state.ctx.version > 0 ? '変更を送信する' : '登録する') + '」を押してください。']), profileBox(), reviewList(true), msg,
       h('div', { class: 'actions', style: 'margin-top:18px' }, [h('button', { class: 'btn ghost sub', onclick: function () { state.stepIdx = secs().length - 1; screenStep(); } }, ['戻る']), send])
     ]));
   }
@@ -529,6 +535,7 @@
     var kids = [h('h2', null, [r.unchanged ? '変更はありませんでした' : (absent ? 'ご回答ありがとうございました' : (r.version > 1 ? '変更を受け付けました' : 'ご登録ありがとうございました'))])];
     if (absent && !r.unchanged) kids.push(h('p', null, ['「今回は不参加」として承りました。']));
     if (r.mailed) kids.push(h('p', null, ['確認メールを ' + r.mailed_to + ' 宛てにお送りしました。']));
+    if (r.rejected && r.rejected.length) kids.push(h('p', { class: 'err' }, ['締切を過ぎた項目（' + r.rejected.length + '件）は変更されていません。変更が必要な場合は事務局へご連絡ください。']));
     else if (!r.unchanged) kids.push(h('p', { class: 'muted' }, ['メールアドレスが未登録のため確認メールは送られません。このページの内容を控えてください。']));
     var d = dates(a, ev);
     if (d) {
@@ -577,28 +584,6 @@
     });
   }
 
-  function openHandoff() {
-    saveDraft();
-    modal('秘書の方に引き継ぐ', function (close) {
-      var f = { name: h('input', { type: 'text', placeholder: '例：鈴木' }), email: h('input', { type: 'email', placeholder: 'hisho@example.co.jp', autocomplete: 'off' }) };
-      f.name.value = state.answers.secretary_name || ''; f.email.value = state.answers.secretary_email || '';
-      var msg = h('div');
-      var row = function (label, el, opt) { return h('div', { class: 'q' }, [h('label', { class: 'label' }, [label, opt ? h('span', { class: 'opt' }, ['任意']) : null]), el]); };
-      var send = h('button', { class: 'btn primary', onclick: function () {
-        msg.innerHTML = '';
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(f.email.value.trim())) { msg.appendChild(err('秘書の方のメールアドレスをご確認ください')); return; }
-        busy(send, true);
-        api('handoff', { p: state.token, answers: state.answers, secretary_name: f.name.value.trim(), secretary_email: f.email.value.trim(), base_url: location.origin + location.pathname }).then(function (r) {
-          busy(send, false);
-          if (!r.ok) { msg.appendChild(err(r.message)); return; }
-          state.answers.contact_via = 'secretary'; state.answers.secretary_name = f.name.value.trim(); state.answers.secretary_email = f.email.value.trim(); saveDraft();
-          box.innerHTML = ''; box.appendChild(h('p', { class: 'ok' }, [r.sent_to + ' 宛てに、続きを入力するためのリンクをお送りしました。ここまでの入力内容は保存されています。このまま画面を閉じていただいて構いません。'])); box.appendChild(h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: close }, ['閉じる'])]));
-        });
-      } }, ['リンクを送る']);
-      var box = h('div', null, [h('p', { class: 'muted' }, ['ここまでの入力内容を保存し、秘書の方へ続きを入力するためのリンクをメールでお送りします。']), row('秘書の方のお名前', f.name, true), row('秘書の方のメールアドレス', f.email), msg, h('div', { class: 'actions' }, [send])]);
-      return [box];
-    });
-  }
   window.nisekoOpenContact = function () { openContact(''); };
 
   // ---- カレンダー
@@ -616,8 +601,22 @@
 
   // ---- 下書き（端末内のみ）
   function dkey() { return 'niseko2027:' + state.token; }
-  function saveDraft() { try { sessionStorage.setItem(dkey(), JSON.stringify(state.answers)); } catch (e) {} }
-  function loadDraft() { try { return JSON.parse(sessionStorage.getItem(dkey()) || 'null'); } catch (e) { return null; } }
+  function saveDraft() { try { sessionStorage.setItem(dkey(), JSON.stringify({ base_version: state.ctx ? state.ctx.version : 0, answers: state.answers })); } catch (e) {} }
+  function loadDraft() {
+    try {
+      var d = JSON.parse(sessionStorage.getItem(dkey()) || 'null');
+      if (!d) return null;
+      if (d.answers === undefined) return d; // 旧形式
+      if (state.ctx && Number(d.base_version) !== Number(state.ctx.version)) return null; // 登録済みの内容より古い下書きは捨てる
+      return d.answers;
+    } catch (e) { return null; }
+  }
+  var draftTimer = null;
+  function saveServerDraft() { // 端末をまたいで続きから入力できるよう、各画面の「次へ」でサーバーにも預ける（待たない）
+    if (!state.token) return;
+    if (draftTimer) clearTimeout(draftTimer);
+    draftTimer = setTimeout(function () { api('saveDraft', { p: state.token, answers: state.answers }); }, 300);
+  }
   function clearDraft() { try { sessionStorage.removeItem(dkey()); } catch (e) {} }
 
   boot();
