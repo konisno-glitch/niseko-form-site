@@ -32,7 +32,15 @@
       { id: 'companion_party', type: 'radio', label: '同伴者の懇親会へのご参加', showIf: function (a) { return a.companions && a.companions !== 'none'; }, options: [
         { v: 'yes', t: '参加する' }, { v: 'no', t: '参加しない' } ], row: true }
     ]},
-    { id: 'transport', phase: 1, title: '交通', questions: [
+    { id: 'contact', phase: 1, title: 'ご連絡', questions: [
+      { id: 'contact_via', type: 'radio', label: '事務局からのご連絡先', options: [
+        { v: 'self', t: 'ご本人へ' }, { v: 'secretary', t: '秘書の方へ' } ], row: true },
+      { id: 'secretary_name', type: 'text', label: '秘書の方のお名前', showIf: function (a) { return a.contact_via === 'secretary'; } },
+      { id: 'secretary_email', type: 'email', label: '秘書の方のメールアドレス', showIf: function (a) { return a.contact_via === 'secretary'; } },
+      { id: 'note1', type: 'textarea', label: '事務局へのご連絡事項', optional: true }
+    ]},
+    // ---- 第2弾（ニセコでの過ごし方）：設定シートの phase2_open を TRUE にすると、同じリンクで表示
+    { id: 'transport', phase: 2, title: '交通', questions: [
       { id: 'go', type: 'radio', label: '行き（新千歳空港 → ニセコ）', options: [
         { v: 'bus', t: '貸切バスに乗る', d: '事務局手配・時刻は後日ご案内' },
         { v: 'self', t: '自分で手配', d: 'レンタカー・タクシー・路線バスなど' } ] },
@@ -41,7 +49,7 @@
         { v: 'self', t: '自分で手配' } ] },
       { id: 'return_flight', type: 'text', label: '帰りの便', optional: true, placeholder: '例：ANA 4726便 16:50発（分かれば）' }
     ]},
-    { id: 'ski', phase: 1, title: 'スキー・スノーボード', questions: [
+    { id: 'ski', phase: 2, title: 'スキー・スノーボード', questions: [
       { id: 'ski', type: 'radio', label: 'スキー・スノーボードをされますか', options: [
         { v: 'yes', t: 'する' }, { v: 'no', t: 'しない' } ], row: true },
       { id: 'ski_type', type: 'radio', label: '種目', showIf: function (a) { return a.ski === 'yes'; }, options: [
@@ -53,34 +61,22 @@
         { v: 'advanced', t: '上級', d: 'どのコースでも滑れる' } ] },
       { id: 'powder', type: 'radio', label: 'パウダーツアー', hint: 'ガイド付きでゲレンデ外のパウダーエリアへ（エキスパート向け・早期予約が必要）', showIf: function (a) { return a.ski === 'yes'; }, options: [
         { v: 'yes', t: '希望する' }, { v: 'no', t: '希望しない' } ], row: true },
-      { id: 'instructor', type: 'radio', label: 'インストラクター', hint: 'グループに付いて一緒に滑り、ゴンドラに並ばず乗れます。費用は1人1日2万円程度（有料）', showIf: function (a) { return a.ski === 'yes'; }, options: [
-        { v: 'yes', t: '希望する', d: '1日2万円程度・有料' }, { v: 'no', t: '希望しない' } ], row: true },
       { id: 'rental', type: 'radio', label: 'レンタル（板・ブーツ・ウェア）', showIf: function (a) { return a.ski === 'yes'; }, options: [
         { v: 'yes', t: '必要' }, { v: 'no', t: '不要' } ], row: true },
       { id: 'no_ski_wish', type: 'check', label: 'スキー以外でご希望のもの', optional: true, hint: '複数選べます', showIf: function (a) { return a.ski === 'no'; }, options: [
         { v: 'onsen', t: '温泉' }, { v: 'lunch', t: 'ランチ会' }, { v: 'distillery', t: '蒸留所見学' }, { v: 'snowmobile', t: 'スノーモービル' }, { v: 'undecided', t: '未定' } ] }
     ]},
-    { id: 'topics', phase: 1, title: '経営テーマ', intro: 'いま関心のある経営テーマを最大3つ、ひと言でお書きください（任意）。座談会やテーブル編成の参考にします。', questions: [
+    { id: 'topics', phase: 2, title: '経営テーマ', intro: 'いま関心のある経営テーマを最大3つ、ひと言でお書きください（任意）。座談会やテーブル編成の参考にします。', questions: [
       { id: 'topic1', type: 'text', label: 'テーマ 1', optional: true, placeholder: '例：AI活用、後継者、海外展開' },
       { id: 'topic2', type: 'text', label: 'テーマ 2', optional: true },
       { id: 'topic3', type: 'text', label: 'テーマ 3', optional: true }
     ]},
-    { id: 'contact', phase: 1, title: 'ご連絡', questions: [
-      { id: 'contact_via', type: 'radio', label: '事務局からのご連絡先', options: [
-        { v: 'self', t: 'ご本人へ' }, { v: 'secretary', t: '秘書の方へ' } ], row: true },
-      { id: 'secretary_name', type: 'text', label: '秘書の方のお名前', showIf: function (a) { return a.contact_via === 'secretary'; } },
-      { id: 'secretary_email', type: 'email', label: '秘書の方のメールアドレス', showIf: function (a) { return a.contact_via === 'secretary'; } },
+    { id: 'extras', phase: 2, title: 'そのほか', questions: [
+      { id: 'arrival_flight', type: 'text', label: '到着便・到着時刻', optional: true, placeholder: '例：ANA 4721便 10:35着' },
       { id: 'diet', type: 'text', label: 'お食事のご制限', optional: true, placeholder: 'アレルギー・苦手なものなど' },
       { id: 'note', type: 'textarea', label: 'その他ご質問・ご要望', optional: true }
-    ]},
-    // ---- 12月に開放する追加項目（設定シートの phase2_open を TRUE にすると表示）
-    { id: 'december', phase: 2, title: '当日のご予定（追加）', questions: [
-      { id: 'arrival_flight', type: 'text', label: '到着便・到着時刻', optional: true, placeholder: '例：ANA 4721便 10:35着' },
-      { id: 'ski_wear_size', type: 'radio', label: 'レンタルウェアのサイズ', optional: true, showIf: function (a) { return a.ski === 'yes' && a.rental === 'yes'; }, options: [
-        { v: 'S', t: 'S' }, { v: 'M', t: 'M' }, { v: 'L', t: 'L' }, { v: 'XL', t: 'XL' } ], row: true }
     ]}
   ];
-
   // ---------------------------------------------------------------- API
   var RETRYABLE = { ping: 1, getContext: 1, lookupSurname: 1 }; // 送信・保存は二重実行を避けるため再試行しない
   function api(action, payload, attempt) {
@@ -545,6 +541,7 @@
         h('a', { href: 'ics/' + icsName(d), download: 'niseko2027.ics' }, ['iPhone / Outlook（.ics）'])
       ]));
     }
+    if (!state.ctx.phases.phase2.open && !absent) kids.push(h('p', { class: 'muted' }, ['交通・スキー・お食事などの「ニセコでの過ごし方」は、後日あらためて同じリンクでお伺いします。']));
     kids.push(h('p', { class: 'muted', style: 'margin-top:14px' }, ['内容の変更は、このページのリンク（確認メールにも記載）からいつでもできます。']));
     kids.push(h('div', { class: 'actions' }, [h('button', { class: 'btn ghost', onclick: screenProfile }, ['登録内容を見る'])]));
     render(card(kids));
