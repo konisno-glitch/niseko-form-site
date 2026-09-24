@@ -118,14 +118,21 @@
   // ---------------------------------------------------------------- 入口
   function boot() {
     foot.textContent = CFG.env === 'test' ? 'テスト環境（本番のデータではありません）' : '';
-    var p = new URLSearchParams(location.search).get('p');
-    if (p) { state.token = p; loadContext(); } else screenEntry();
+    var qs = new URLSearchParams(location.search);
+    var p = qs.get('p'), r = (qs.get('r') || '').trim().toLowerCase();
+    if (r) { state.ref = r; try { sessionStorage.setItem('niseko2027:ref', r); } catch (e) {} }
+    else { try { state.ref = sessionStorage.getItem('niseko2027:ref') || null; } catch (e) {} }
+    if (p) { state.token = p; loadContext(); return; }
+    if (state.ref) {
+      api('ping', { r: state.ref }).then(function (res) { state.refName = (res.ok && res.referrer) ? res.referrer.name : null; if (!state.refName) state.ref = null; screenEntry(); });
+    } else screenEntry();
   }
 
   function screenEntry() {
     render(card([
       h('h1', null, ['ご参加登録']),
-      h('p', { class: 'muted' }, ['3分ほどで終わります。後から同じリンクで変更できます。']),
+      state.refName ? h('p', null, ['事務局の ', h('b', null, [state.refName]), ' よりご案内した方の参加表明ページです。']) : null,
+      h('p', { class: 'muted' }, ['1分ほどで終わります。後から同じリンクで変更できます。']),
       h('button', { class: 'btn primary big', onclick: screenReturning }, ['昨年（ニセコ会議2026）に参加した', h('small', null, ['名字を入れるだけで、会社名などは自動で入ります'])]),
       h('button', { class: 'btn ghost big', onclick: screenNew }, ['初めて参加する', h('small', null, ['お名前・会社名・ご連絡先をご入力ください'])])
     ]));
@@ -217,10 +224,10 @@
       phone: h('input', { type: 'tel', placeholder: '090-0000-0000（任意）', autocomplete: 'tel' }),
       referrer: h('select', null, [h('option', { value: '' }, ['選択してください'])])
     };
-    fetchReferrers().then(function (list) { list.forEach(function (n) { f.referrer.appendChild(h('option', { value: n }, [n])); }); });
+    fetchReferrers().then(function (list) { list.forEach(function (n) { f.referrer.appendChild(h('option', { value: n }, [n])); }); if (state.refName) f.referrer.value = state.refName; });
     var msg = h('div');
     var go = h('button', { class: 'btn primary', onclick: function () {
-      var np = { name: f.name.value.trim(), company: f.company.value.trim(), title: f.title.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), referrer: f.referrer.value };
+      var np = { name: f.name.value.trim(), company: f.company.value.trim(), title: f.title.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), referrer: state.refName || f.referrer.value };
       msg.innerHTML = '';
       if (!np.name || !np.company || !np.email) { msg.appendChild(err('お名前・会社名・メールアドレスは必須です')); return; }
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(np.email)) { msg.appendChild(err('メールアドレスの形式をご確認ください')); return; }
@@ -230,7 +237,8 @@
     render(card([
       h('h2', null, ['はじめてのご参加']),
       h('p', { class: 'muted' }, ['ご入力のメールアドレスに認証コードをお送りします。']),
-      row('お名前', f.name), row('会社名', f.company), row('役職', f.title), row('メールアドレス', f.email), row('電話番号', f.phone, true), row('ご紹介者（事務局メンバー）', f.referrer),
+      row('お名前', f.name), row('会社名', f.company), row('役職', f.title), row('メールアドレス', f.email), row('電話番号', f.phone, true),
+      state.refName ? h('div', { class: 'q' }, [h('label', { class: 'label' }, ['ご紹介者']), h('div', null, [state.refName + '（事務局）'])]) : row('ご紹介者（事務局メンバー）', f.referrer),
       msg,
       h('div', { class: 'actions' }, [h('button', { class: 'btn ghost sub', onclick: screenEntry }, ['戻る']), go])
     ]));
@@ -251,6 +259,7 @@
     if (sendingCode) return;
     sendingCode = true;
     busy(btn, true);
+    if (state.ref && !payload.r) payload.r = state.ref;
     api('sendCode', payload).then(function (r) {
       sendingCode = false;
       busy(btn, false);
