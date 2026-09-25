@@ -124,14 +124,14 @@
     else { try { state.ref = sessionStorage.getItem('niseko2027:ref') || null; } catch (e) {} }
     if (p) { state.token = p; loadContext(); return; }
     if (state.ref) {
-      api('ping', { r: state.ref }).then(function (res) { state.refName = (res.ok && res.referrer) ? res.referrer.name : null; if (!state.refName) state.ref = null; screenEntry(); });
+      api('ping', { r: state.ref }).then(function (res) { state.refName = (res.ok && res.referrer) ? res.referrer.name : null; state.refFull = (res.ok && res.referrer) ? res.referrer.full : null; if (!state.refName) state.ref = null; screenEntry(); });
     } else screenEntry();
   }
 
   function screenEntry() {
     render(card([
       h('h1', null, ['ご参加登録']),
-      state.refName ? h('p', null, ['事務局の ', h('b', null, [state.refName]), ' よりご案内した方の参加表明ページです。']) : null,
+      state.refName ? h('p', null, ['事務局の ', h('b', null, [state.refFull || state.refName]), ' よりご案内した方の参加表明ページです。']) : null,
       h('p', { class: 'muted' }, ['1分ほどで終わります。後から同じリンクで変更できます。']),
       h('button', { class: 'btn primary big', onclick: screenReturning }, ['昨年（ニセコ会議2026）に参加した', h('small', null, ['名字を入れるだけで、会社名などは自動で入ります'])]),
       h('button', { class: 'btn ghost big', onclick: screenNew }, ['初めて参加する', h('small', null, ['お名前・会社名・ご連絡先をご入力ください'])])
@@ -224,7 +224,7 @@
       phone: h('input', { type: 'tel', placeholder: '090-0000-0000（任意）', autocomplete: 'tel' }),
       referrer: h('select', null, [h('option', { value: '' }, ['選択してください'])])
     };
-    fetchReferrers().then(function (list) { list.forEach(function (n) { f.referrer.appendChild(h('option', { value: n }, [n])); }); if (state.refName) f.referrer.value = state.refName; });
+    fetchReferrers().then(function (list) { list.forEach(function (n) { f.referrer.appendChild(h('option', { value: n.name }, [n.full])); }); if (state.refName) f.referrer.value = state.refName; });
     var msg = h('div');
     var go = h('button', { class: 'btn primary', onclick: function () {
       var np = { name: f.name.value.trim(), company: f.company.value.trim(), title: f.title.value.trim(), email: f.email.value.trim(), phone: f.phone.value.trim(), referrer: state.refName || f.referrer.value };
@@ -238,7 +238,7 @@
       h('h2', null, ['はじめてのご参加']),
       h('p', { class: 'muted' }, ['ご入力のメールアドレスに認証コードをお送りします。']),
       row('お名前', f.name), row('会社名', f.company), row('役職', f.title), row('メールアドレス', f.email), row('電話番号', f.phone, true),
-      state.refName ? h('div', { class: 'q' }, [h('label', { class: 'label' }, ['ご紹介者']), h('div', null, [state.refName + '（事務局）'])]) : row('ご紹介者（事務局メンバー）', f.referrer),
+      state.refName ? h('div', { class: 'q' }, [h('label', { class: 'label' }, ['ご紹介者']), h('div', null, [(state.refFull || state.refName) + '（ニセコ会議 事務局）'])]) : row('ご紹介者（ニセコ会議 事務局メンバー）', f.referrer),
       msg,
       h('div', { class: 'actions' }, [h('button', { class: 'btn ghost sub', onclick: screenEntry }, ['戻る']), go])
     ]));
@@ -248,7 +248,7 @@
   function fetchReferrers() {
     if (referrersCache) return Promise.resolve(referrersCache);
     return api('ping').then(function (r) {
-      referrersCache = (r.ok && r.referrers && r.referrers.length) ? r.referrers : ['富山', '小西', '白井', '佐伯', '渡辺', '高橋', 'その他・不明'];
+      referrersCache = (r.ok && r.referrers && r.referrers.length) ? r.referrers.map(function (x) { return typeof x === 'string' ? { name: x, full: x } : x; }) : ['富山', '小西', '白井', '佐伯', '渡辺', '高橋', 'その他・不明'].map(function (x) { return { name: x, full: x }; });
       return referrersCache;
     });
   }
