@@ -75,7 +75,7 @@ textarea{min-height:84px;resize:vertical}
 </head>
 <body>
 <div class="wrap">
-<span class="badge">見本（送信しても、どこにも送られません）</span>
+<span class="badge">見本（事務局メンバーのお名前で試せます。送信しても、どこにも送られません）</span>
 
 <form id="f" novalidate class="wrap" style="width:100%">
 
@@ -93,21 +93,13 @@ textarea{min-height:84px;resize:vertical}
     <h2 id="hA">A. お名前</h2>
     <div class="q" id="findBox">
       <label for="whoq">名字を入れて、ご自分のお名前を選んでください<span class="req">*</span></label>
-      <input type="text" id="whoq" value="小西" autocomplete="off">
-      <div class="sugg" id="sugg">
-        <button type="button" id="pickMe">小西 憲明（サツドラホールディングス）</button>
-      </div>
+      <input type="text" id="whoq" autocomplete="off" placeholder="例：小西">
+      <div class="sugg" id="sugg" hidden></div>
     </div>
     <div class="card1" id="me" hidden>
-      <strong>小西 憲明 様（サツドラホールディングス）</strong>
-      <p class="muted">第1回でいただいたご回答です。</p>
-      <dl>
-        <dt>日程</dt><dd>フル（2/18〜21）</dd>
-        <dt>宿泊</dt><dd>相部屋（富山社長と同室）</dd>
-        <dt>ホテル予約</dt><dd>事務局で手配済み</dd>
-        <dt>行き・帰り</dt><dd>自前・自前</dd>
-        <dt>担当</dt><dd>小西 憲明</dd>
-      </dl>
+      <strong id="meName"></strong>
+      <p class="muted" id="meLead"></p>
+      <dl id="meDl"></dl>
       <p class="muted">変更がある場合は、Eの記入欄にお書きください。</p>
       <button type="button" class="link" id="notMe">別の方を選ぶ</button>
     </div>
@@ -215,7 +207,7 @@ textarea{min-height:84px;resize:vertical}
   function render(){
     daysEl.innerHTML='';
     ['19','20'].forEach(d=>{
-      const box=document.createElement('div');box.className='day';
+      const box=document.createElement('div');box.className='day';box.dataset.d=d;
       box.innerHTML='<h3>'+DAYS[d]+'</h3>';
       const opts=document.createElement('div');opts.className='opts';opts.setAttribute('role','radiogroup');opts.setAttribute('aria-label',DAYS[d]+'の過ごし方');
       let last='';
@@ -236,24 +228,42 @@ textarea{min-height:84px;resize:vertical}
     skiRule();
   }
   function skiRule(){
-    const any=['19','20'].some(d=>ACT.find(a=>a.id===pick[d]).ski);
+    const any=['19','20'].filter(d=>{const el=document.querySelector('.day[data-d="'+d+'"]');return !el||!el.hidden;}).some(d=>ACT.find(a=>a.id===pick[d]).ski);
     document.getElementById('secC').hidden=!any;
   }
   document.querySelectorAll('input[name=fam]').forEach(i=>i.addEventListener('change',()=>{
     document.getElementById('famBox').hidden=document.querySelector('input[name=fam]:checked').value!=='yes';}));
 
-  const findBox=document.getElementById('findBox'),me=document.getElementById('me');
-  document.getElementById('pickMe').addEventListener('click',()=>{findBox.hidden=true;me.hidden=false;});
-  document.getElementById('notMe').addEventListener('click',()=>{findBox.hidden=false;me.hidden=true;});
+  const PEOPLE=[{"n": "小西 憲明", "c": "サツドラホールディングス", "d": "フル（2/18〜21）", "go": "自前", "back": "自前", "stay": "富山社長と同室", "ans": true}, {"n": "高橋 卓", "c": "", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "渡辺 尚", "c": "", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "小松 絢音", "c": "ファーストパートナーズ", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "川上 真央", "c": "レントラックス", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "高橋 淳丈", "c": "野村不動産", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "杉之原 明子", "c": "みんなのコード", "d": "フル（2/18〜21）", "go": "貸切バス", "back": "貸切バス", "stay": "手配ありがとうございます。", "ans": true}, {"n": "白井 佳子", "c": "CXO倶楽部", "d": "フル（2/18〜21）", "go": "貸切バス", "back": "貸切バス", "stay": "相部屋", "ans": true}, {"n": "黒石 涼", "c": "未来創造弁護士法人", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "遠藤 碧", "c": "サポーターズ", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "高橋 采花", "c": "パソナJOBHUB", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "石川 友夫", "c": "IDEATECH", "d": "フル（2/18〜21）", "go": "自前", "back": "自前", "stay": "自分で手配", "ans": true}, {"n": "松野平 勝", "c": "武蔵精密工業", "d": "", "go": "", "back": "", "stay": "", "ans": false}, {"n": "宇佐美 進典", "c": "VOYAGE CAPITAL", "d": "", "go": "", "back": "", "stay": "", "ans": false}];
+  const findBox=document.getElementById('findBox'),me=document.getElementById('me'),sugg=document.getElementById('sugg');
+  let chosen=null;
+  function showDays(){
+    const d=chosen?chosen.d:'';
+    const list=d.indexOf('2/18〜20')===0?['19']:d.indexOf('2/19〜21')===0?['20']:['19','20'];
+    document.querySelectorAll('.day').forEach(el=>{el.hidden=list.indexOf(el.dataset.d)<0;});
+    skiRule();
+  }
+  function choose(p){
+    chosen=p;findBox.hidden=true;me.hidden=false;
+    document.getElementById('meName').textContent=p.n+' 様'+(p.c?'（'+p.c+'）':'');
+    document.getElementById('meLead').textContent=p.ans?'第1回でいただいたご回答です。':'第1回のアンケートは、まだご回答いただいていません。';
+    const rows=p.ans?[['日程',p.d],['宿泊',p.stay||'—'],['ホテル予約','事務局で手配済み'],['行き・帰り',(p.go||'—')+'・'+(p.back||'—')]]:[['ホテル予約','事務局で手配済み']];
+    document.getElementById('meDl').innerHTML=rows.map(([k,v])=>'<dt>'+k+'</dt><dd>'+esc(v)+'</dd>').join('');
+    showDays();
+  }
+  document.getElementById('notMe').addEventListener('click',()=>{chosen=null;findBox.hidden=false;me.hidden=true;showDays();});
   document.getElementById('whoq').addEventListener('input',e=>{
-    document.getElementById('sugg').hidden=!'小西'.startsWith(e.target.value.trim())||!e.target.value.trim();});
-
+    const q=e.target.value.replace(/[\s　]/g,'');
+    const hit=q?PEOPLE.filter(p=>p.n.replace(/\s/g,'').indexOf(q)===0):[];
+    sugg.innerHTML='';sugg.hidden=!hit.length;
+    hit.forEach(p=>{const b=document.createElement('button');b.type='button';b.textContent=p.n+(p.c?'（'+p.c+'）':'');b.addEventListener('click',()=>choose(p));sugg.appendChild(b);});
+  });
   document.getElementById('f').addEventListener('submit',e=>{
     e.preventDefault();
     const sum=document.getElementById('sum');sum.innerHTML='';
     const add=t=>{const li=document.createElement('li');li.textContent=t;sum.appendChild(li);};
-    add('お名前：'+(me.hidden?'（未選択）':'小西 憲明（サツドラホールディングス）'));
-    ['19','20'].forEach(d=>add(DAYS[d]+'：'+ACT.find(a=>a.id===pick[d]).t));
+    add('お名前：'+(chosen?chosen.n+(chosen.c?'（'+chosen.c+'）':''):'（未選択）'));
+    ['19','20'].forEach(d=>{const el=document.querySelector('.day[data-d="'+d+'"]');if(!el.hidden)add(DAYS[d]+'：'+ACT.find(a=>a.id===pick[d]).t);});
     if(!document.getElementById('secC').hidden){
       const t=n=>{const c=document.querySelector('input[name='+n+']:checked');return c?c.closest('label').querySelector('.t').firstChild.textContent:'未選択';};
       add('スキー・スノボ：'+t('kind')+'・'+t('lv')+'・'+t('sex'));
