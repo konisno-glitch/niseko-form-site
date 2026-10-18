@@ -252,12 +252,15 @@ textarea{min-height:84px;resize:vertical}
     showDays();
   }
   document.getElementById('notMe').addEventListener('click',()=>{chosen=null;findBox.hidden=false;me.hidden=true;showDays();});
-  document.getElementById('whoq').addEventListener('input',e=>{
-    const q=e.target.value.replace(/[\s　]/g,'');
-    const hit=q?PEOPLE.filter(p=>p.n.replace(/\s/g,'').indexOf(q)===0):[];
+  const whoq=document.getElementById('whoq');
+  const norm=t=>t.replace(/[\s　]/g,'').replace(/髙/g,'高').replace(/﨑/g,'崎');
+  function suggest(){
+    const q=norm(whoq.value);
+    const hit=q?PEOPLE.filter(p=>norm(p.n).indexOf(q)===0):[];
     sugg.innerHTML='';sugg.hidden=!hit.length;
     hit.forEach(p=>{const b=document.createElement('button');b.type='button';b.textContent=p.n+(p.c?'（'+p.c+'）':'');b.addEventListener('click',()=>choose(p));sugg.appendChild(b);});
-  });
+  }
+  ['input','keyup','compositionend','change'].forEach(ev=>whoq.addEventListener(ev,suggest));
   document.getElementById('f').addEventListener('submit',e=>{
     e.preventDefault();
     const sum=document.getElementById('sum');sum.innerHTML='';
