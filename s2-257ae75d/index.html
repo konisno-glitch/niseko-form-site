@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<title>ニセコ会議2027 第2回アンケート</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
+<link rel="stylesheet" href="base.css?v=1">
+</head>
+<body>
+<div class="wrap">
+<span class="badge" id="testBadge" hidden>テスト版（本番とは別のデータです。メールはテスト用のアドレスにだけ届きます）</span>
+<header class="head">
+  <h1>【ニセコ会議2027】第2回アンケート</h1>
+  <p>当日の過ごし方を伺います。3分ほどで終わります。</p>
+  <div class="facts">
+    <span>締切 <b id="deadline">11/27（金）</b></span>
+    <span>アクティビティ・バックカントリーは<b>先着順</b></span>
+  </div>
+</header>
+
+<!-- 1. 名前 -->
+<section class="sec stage" id="stName" hidden>
+  <h2>お名前</h2>
+  <div class="q">
+    <label for="surname">名字を入れて「探す」を押し、ご自分のお名前を選んでください</label>
+    <div class="row">
+      <input type="text" id="surname" autocomplete="family-name" placeholder="例：小西" style="flex:1;min-width:10em">
+      <button class="btn" type="button" id="find">探す</button>
+    </div>
+    <div class="sugg" id="cands" hidden></div>
+    <p class="err" id="nameErr" hidden></p>
+  </div>
+</section>
+
+<!-- 2. メールの確認 -->
+<section class="sec stage" id="stMail" hidden>
+  <h2 id="mailWho"></h2>
+  <p>ほかの方がお名前を選んでもご回答が見えないよう、メールで確認コードをお送りしています。ご回答内容の確認メールも、同じアドレスにお送りします。</p>
+  <div class="q" id="addrBox">
+    <span class="ql">確認コードの送り先</span>
+    <div class="opts" id="addrOpts" role="radiogroup" aria-label="確認コードの送り先"></div>
+  </div>
+  <div class="q" id="newBox" hidden>
+    <label for="newMail" id="newMailLabel">メールアドレス</label>
+    <input type="email" id="newMail" autocomplete="email" placeholder="例：name@example.co.jp">
+  </div>
+  <div class="q">
+    <span class="ql">このアドレスは、どなたのものですか<span class="req">*</span></span>
+    <div class="opts" role="radiogroup" aria-label="どなたのアドレスか">
+      <label class="opt"><input type="radio" name="role" value="本人"><span class="t">ご本人</span></label>
+      <label class="opt"><input type="radio" name="role" value="秘書・担当者"><span class="t">秘書・ご担当者<span class="s">ご本人の代わりにご回答いただけます</span></span></label>
+    </div>
+  </div>
+  <p class="err" id="mailErr" hidden></p>
+  <div class="row">
+    <button class="btn" type="button" id="sendCode">確認コードを送る</button>
+    <button class="link" type="button" id="backName">別の方を選ぶ</button>
+  </div>
+</section>
+
+<!-- 3. 確認コード -->
+<section class="sec stage" id="stCode" hidden>
+  <h2>確認コードを入れてください</h2>
+  <p><span class="addr" id="codeTo"></span> に、6桁の確認コードをお送りしました（10分間有効）。</p>
+  <input type="text" class="code" id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="000000">
+  <p class="err" id="codeErr" hidden></p>
+  <div class="row"><button class="btn" type="button" id="verify">確認する</button></div>
+  <div class="help" id="codeHelp" hidden>
+    <strong>メールが届かないとき</strong>
+    <span>・迷惑メールのフォルダをご確認ください。送り元は「ニセコ会議2027 事務局」です</span>
+    <span>・会社のメールは、外からの自動のメールが遅れたり届かなかったりすることがあります。別のアドレスもお試しください</span>
+    <div class="row"><button class="btn sub" type="button" id="resend">もう一度送る</button><button class="link" type="button" id="otherAddr">別のアドレスにする</button></div>
+  </div>
+</section>
+
+<!-- 4. アンケート -->
+<form id="stForm" class="stage" novalidate hidden>
+  <section class="sec">
+    <h2>A. お名前</h2>
+    <div class="card1">
+      <strong id="meName"></strong>
+      <p class="muted" id="meLead"></p>
+      <dl id="meDl"></dl>
+      <p class="muted">第1回のご回答から変更がある場合は、Eの記入欄にお書きください。</p>
+      <button type="button" class="link" id="logout">別の方としてご回答になる場合はこちら</button>
+    </div>
+  </section>
+  <section class="sec">
+    <h2>B. 日ごとの過ごし方</h2>
+    <p>日ごとに1つ選んでください。人数の決まっているものは先着順で、満員になると選べなくなります。</p>
+    <div id="days"></div>
+    <p class="muted" id="noDays" hidden>第1回のご回答の日程では、アクティビティのある日（2/19・2/20）のご滞在がありません。変更がある場合はEにお書きください。</p>
+    <div class="note">
+      <strong>キャンセルされた場合</strong><br>
+      その日は「自分たちで滑る」か「自分で過ごす」に変わります。1/31（日）までにご連絡いただければ、空きのある別のアクティビティへの変更をご相談できます。キャンセル料は各選択肢に書いたとおりです。<br><br><strong>最少人数に届かなかった場合</strong><br>そのアクティビティは中止とし、締切後にご連絡します。空きのある別のアクティビティへの変更をご相談できます。
+    </div>
+  </section>
+  <section class="sec" id="secC">
+    <h2>C. スキー・スノボ <span class="tag">滑る日がある方</span></h2>
+    <div class="q"><span class="ql">種目<span class="req">*</span></span><div class="opts" id="o-kind" role="radiogroup" aria-label="種目"></div></div>
+    <div class="q"><span class="ql">レベル<span class="req">*</span></span><div class="opts" id="o-level" role="radiogroup" aria-label="レベル"></div></div>
+    <div class="q"><span class="ql">性別<span class="req">*</span></span><div class="opts" id="o-sex" role="radiogroup" aria-label="性別"></div></div>
+    <p class="note">板・ブーツ・ヘルメットのレンタルは、各自でご手配ください。ヘルメットは全員着用です。</p>
+  </section>
+  <section class="sec">
+    <h2>D. 同伴者（ご家族など）</h2>
+    <div class="q"><span class="ql">同伴者はいますか<span class="req">*</span></span>
+      <div class="opts" role="radiogroup" aria-label="同伴者">
+        <label class="opt"><input type="radio" name="fam" value="no"><span class="t">いない</span></label>
+        <label class="opt"><input type="radio" name="fam" value="yes"><span class="t">いる</span></label>
+      </div>
+    </div>
+    <div id="famBox" class="q" hidden>
+      <label for="famN">人数</label>
+      <select id="famN"><option>1名</option><option>2名</option><option>3名以上</option></select>
+      <label for="famWish">日ごとにやりたいこと</label>
+      <textarea id="famWish" placeholder="例：妻 2/19はスキー（班）、2/20はニッカ希望。両日とも懇親会に参加"></textarea>
+      <div class="note">料金は参加者と同じです。スキー・スノボ（班で滑る）だけ、1日10,000円かかります。</div>
+      <div class="note warn">定員のあるアクティビティは、参加者の方が優先です。ご希望に沿えるかは、会期の10営業日前ごろにお知らせします。</div>
+    </div>
+  </section>
+  <section class="sec">
+    <h2>E. その他</h2>
+    <div class="q">
+      <label for="memo">第1回のご回答からの変更、食事の制限、ご要望など</label>
+      <textarea id="memo" placeholder="満員の選択肢を希望される方も、こちらにお書きください"></textarea>
+    </div>
+    <div class="q">
+      <span class="ql">確認メールの送り先</span>
+      <ul id="mailList" class="muted" style="margin:0;padding-left:1.2em"></ul>
+    </div>
+    <div class="q" id="addBox" hidden>
+      <label for="addMail" id="addLabel">ご本人のアドレスも登録しますか（任意）</label>
+      <input type="email" id="addMail" autocomplete="email" placeholder="例：name@example.co.jp">
+      <p class="muted" id="addNote">登録すると、ご回答内容の確認メールがこのアドレスにも届きます。</p>
+    </div>
+    <p class="err" id="saveErr" hidden></p>
+    <button class="btn" type="submit" id="save">送信</button>
+  </section>
+</form>
+
+<!-- 5. 完了 -->
+<section class="sec stage" id="stDone" hidden aria-live="polite">
+  <h2>ご回答ありがとうございました</h2>
+  <ul id="sum"></ul>
+  <p id="mailed"></p>
+  <div class="cal" id="calBox">
+    <strong>カレンダーに追加</strong>
+    <a href="#" id="icsLink" download="niseko2027.ics">iPhone・Outlook のカレンダーに追加</a>
+    <div id="gcal" class="cal"></div>
+  </div>
+  <p class="muted">内容を変えたいときは、締切まで、同じリンクから開いて変更できます。</p>
+  <div class="row"><button class="btn sub" type="button" id="edit">内容を変える</button></div>
+</section>
+
+<p class="muted" id="loading">読み込んでいます…</p>
+</div>
+<script src="app.js?v=1"></script>
+</body>
+</html>
