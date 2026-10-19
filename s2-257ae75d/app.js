@@ -191,7 +191,7 @@
         var left = x.cap ? x.cap - ((r.taken[d.key] || {})[x.id] || 0) : null;
         var full = left !== null && left <= 0 && cur !== x.id;
         html += '<label class="opt' + (full ? ' full' : '') + '"><input type="radio" name="' + d.key + '" value="' + x.id + '"' + (full ? ' disabled' : '') + (cur === x.id ? ' checked' : '') + '>' +
-          '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (x.cap ? '<span class="left">' + (full ? '満員' : '残り' + Math.max(left, cur === x.id ? 1 : 0) + '名') + '</span>' : '') + '</span>' +
+          '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (x.cap ? '<span class="left">' + (cur === x.id ? 'お申し込み済み' : full ? '満員' : '残り' + left + '名') + '</span>' : '') + '</span>' +
           ((x.info.length || x.cap) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + x.min + '〜' + x.cap + '名</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + esc(kv[1]) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
       });
       el.innerHTML = html + '</div>';
