@@ -46,7 +46,7 @@ textarea{min-height:84px;resize:vertical}
 .full .left{color:var(--full)}
 .grp{font-size:.8rem;color:var(--muted);letter-spacing:.06em;margin-top:6px}
 .day{border-left:3px solid var(--accent);padding-left:12px;display:flex;flex-direction:column;gap:8px}
-.day h3{font-size:1rem}
+.day h3{font-size:1.35rem;line-height:1.3;color:var(--accent);padding:2px 0 4px;border-bottom:1px solid var(--line)}
 .note{font-size:.84rem;background:var(--accent-soft);border-radius:6px;padding:8px 10px}
 .note.warn{background:transparent;border:1px solid var(--warn)}
 .sugg{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;overflow:hidden}
