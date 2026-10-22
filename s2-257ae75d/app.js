@@ -163,6 +163,12 @@
     $('meLead').textContent = f.answered ? '第1回でいただいたご回答です。' : '第1回のアンケートは、まだご回答いただいていません。';
     var rows = f.answered ? [['日程', f.days], ['宿泊', f.stay || '—'], ['行き・帰り', (f.go || '—') + '・' + (f.back || '—')]] : [];
     $('meDl').innerHTML = rows.map(function (x) { return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('');
+    // 第1回の帰りがはっきりしない人だけに聞く（はっきりしている人には出さない）
+    $('retBox').hidden = !f.askReturn;
+    if (f.askReturn) {
+      $('retLead').textContent = '第1回のご回答：「' + (f.back || '未記入') + '」（日程：' + (f.days || '—') + '）';
+      radios('o-ret', 'ret', r.returnOpts || [], a.ret);
+    }
     renderDays(a);
     radios('o-kind', 'kind', ['スキー', 'スノーボード'], a.kind);
     radios('o-level', 'level', ['初級', '中級', '上級', 'エキスパート'], a.level);
@@ -215,6 +221,7 @@
     ['kind', 'level', 'sex', 'fam'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
     ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value;
+    var rc = document.querySelector('input[name=ret]:checked'); ans.ret = rc ? rc.value : '';
     var add = $('addBox').hidden ? '' : $('addMail').value.trim();
     busy($('save'), true); err('saveErr', '');
     api('save', { s: st.s, answers: ans, add_email: add, add_role: '本人' }).then(function (res) {
