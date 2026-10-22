@@ -7,7 +7,7 @@
 <title>ニセコ会議2027 第2回アンケート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
-<link rel="stylesheet" href="base.css?v=2">
+<link rel="stylesheet" href="base.css?v=3">
 </head>
 <body>
 <div class="wrap">
@@ -85,10 +85,10 @@
       <p class="muted" id="meLead"></p>
       <dl id="meDl"></dl>
       <p class="muted">第1回のご回答から変更がある場合は、Eの記入欄にお書きください。</p>
-      <div class="q" id="retBox" hidden>
-        <span class="ql">帰りの交通をあらためて教えてください<span class="req">*</span></span>
-        <p class="muted" id="retLead"></p>
-        <div class="opts" id="o-ret" role="radiogroup" aria-label="帰りの交通"></div>
+      <div class="note alert" id="warnBox" hidden>
+        <strong>ご確認ください</strong>
+        <ul id="warnList"></ul>
+        <span>訂正やご連絡があれば、下の「E. その他」にご記入ください。</span>
       </div>
       <button type="button" class="link" id="logout">別の方としてご回答になる場合はこちら</button>
     </div>
@@ -168,6 +168,6 @@
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

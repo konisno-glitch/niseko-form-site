@@ -49,6 +49,9 @@ textarea{min-height:84px;resize:vertical}
 .day h3{font-size:1.35rem;line-height:1.3;color:var(--accent);padding:2px 0 4px;border-bottom:1px solid var(--line)}
 .note{font-size:.84rem;background:var(--accent-soft);border-radius:6px;padding:8px 10px}
 .note.warn{background:transparent;border:1px solid var(--warn)}
+.note.alert{background:transparent;border:1px solid var(--warn);color:var(--warn);font-size:.9rem;margin:10px 0}
+.note.alert ul{margin:6px 0;padding-left:1.2em}
+.note.alert li{margin:3px 0}
 .sugg{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 .sugg button{font:inherit;text-align:left;background:var(--card);color:var(--ink);border:0;border-bottom:1px solid var(--line);padding:9px 11px;cursor:pointer}
 .sugg button:last-child{border-bottom:0}
