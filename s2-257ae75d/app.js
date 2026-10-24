@@ -38,6 +38,7 @@
     err('nameErr', ''); busy($('find'), true);
     api('lookup', { surname: q }).then(function (r) {
       busy($('find'), false);
+      $('nameAskOpen').hidden = false;
       var box = $('cands'); box.innerHTML = '';
       if (!r.ok) { box.hidden = true; return err('nameErr', r.message); }
       if (!r.candidates.length) { box.hidden = true; return err('nameErr', 'お名前が見つかりませんでした。漢字を変えてお試しいただくか、担当の事務局へご連絡ください'); }
@@ -51,6 +52,23 @@
     });
   }
   $('find').addEventListener('click', find);
+  // お名前が見つからないとき：事務局へ連絡（2026-10-24 小西さん指示）
+  $('nameAskOpen').addEventListener('click', function () {
+    $('nameAskBox').hidden = false; $('nameAskOpen').hidden = true;
+    if (!$('askName').value) $('askName').value = $('surname').value.trim();
+    $('askName').focus();
+  });
+  $('nameAskSend').addEventListener('click', function () {
+    var name = $('askName').value.trim(), contact = $('askContact').value.trim();
+    if (!name) return err('nameAskErr', 'お名前を入れてください');
+    if (!contact) return err('nameAskErr', 'ご連絡先（電話番号またはメールアドレス）を入れてください');
+    err('nameAskErr', ''); busy($('nameAskSend'), true);
+    api('ask', { kind: 'name', name: name, company: $('askCompany').value.trim(), contact: contact, body: $('askBody').value.trim() }).then(function (r) {
+      busy($('nameAskSend'), false);
+      if (!r.ok) return err('nameAskErr', r.message);
+      $('nameAskBox').hidden = true; $('nameAskDone').hidden = false;
+    });
+  });
   $('surname').addEventListener('keydown', function (e) { if (e.key === 'Enter' && !e.isComposing) { e.preventDefault(); find(); } });
 
   // ---------------------------------------------------------------- 2. メール
@@ -161,11 +179,20 @@
     $('meName').textContent = me.name + ' 様' + (me.company ? '（' + me.company + '）' : '');
     var f = me.first;
     $('meLead').textContent = f.answered ? '第1回でいただいたご回答です。' : '第1回のアンケートは、まだご回答いただいていません。';
-    var rows = (f.answered ? [['日程', f.days], ['宿泊', f.stay || '—'], ['行き', f.go || '—'], ['帰り', f.back || '—']] : []).concat([['ホテル', f.hotel]]);
+    var rows = (f.answered ? [['日程', f.days], ['宿泊', f.stay || '—']] : []).concat([['ホテル', f.hotel]]);
     $('meDl').innerHTML = rows.map(function (x) { return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('');
     // 第1回のご回答とホテルの予約の食い違いは赤字で（文はサーバーが決まった文で作る）
     $('warnBox').hidden = !f.warns.length;
     $('warnList').innerHTML = f.warns.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('');
+    // A：行き・帰りはここで直せる。日程・ホテルは事務局へ連絡（2026-10-24 小西さん指示）
+    radios('o-go', 'go', ['貸切バス', '自前'], ['貸切バス', '自前'].indexOf(f.go) >= 0 ? f.go : '');
+    radios('o-back', 'back', ['貸切バス', '自前'], ['貸切バス', '自前'].indexOf(f.back) >= 0 ? f.back : '');
+    $('firstSave').textContent = me.confirmed ? '行き・帰りの変更を保存' : 'この内容で次へ';
+    $('goBackBox').hidden = me.hold; $('holdBox').hidden = !me.hold;
+    $('hotelOpen').hidden = me.hold; $('hotelBox').hidden = true;
+    $('staffLine').textContent = me.staff ? '担当の事務局（' + me.staff + '）に、Messenger などで直接ご連絡いただいても構いません。' : '';
+    err('firstErr', '');
+    $('rest').hidden = !me.confirmed || me.hold;
     renderDays(a);
     radios('o-kind', 'kind', ['スキー', 'スノーボード'], a.kind);
     radios('o-level', 'level', ['初級', '中級', '上級', 'エキスパート'], a.level);
@@ -180,6 +207,34 @@
     if (r.test) $('testBadge').hidden = false;
     skiRule();
   }
+
+  $('firstSave').addEventListener('click', function () {
+    var go = radio('go'), back = radio('back');
+    if (!go || !back) return err('firstErr', '行きと帰りの交通を選んでください');
+    var wasConfirmed = st.me.me.confirmed;
+    err('firstErr', ''); busy($('firstSave'), true); $('firstSave').textContent = '保存しています…';
+    api('confirmFirst', { s: st.s, go: go, back: back }).then(function (r) {
+      busy($('firstSave'), false);
+      if (!r.ok) { $('firstSave').textContent = wasConfirmed ? '行き・帰りの変更を保存' : 'この内容で次へ'; return err('firstErr', r.message); }
+      var keep = st.me.answer; st.me = r; if (!r.answer && keep) st.me.answer = keep;
+      renderForm();
+      if (!wasConfirmed) $('rest').scrollIntoView({ behavior: 'smooth' });
+      else err('firstErr', '');
+    });
+  });
+  $('hotelOpen').addEventListener('click', function () { $('hotelBox').hidden = false; $('hotelOpen').hidden = true; $('hotelBody').focus(); });
+  $('hotelCancel').addEventListener('click', function () { $('hotelBox').hidden = true; $('hotelOpen').hidden = false; });
+  $('hotelSend').addEventListener('click', function () {
+    var body = $('hotelBody').value.trim(), contact = $('hotelContact').value.trim();
+    if (!body) return err('hotelErr', '変更したい内容を書いてください');
+    if (!contact) return err('hotelErr', 'ご連絡先（電話番号またはメールアドレス）を入れてください');
+    err('hotelErr', ''); busy($('hotelSend'), true);
+    api('ask', { kind: 'hotel', s: st.s, body: body, contact: contact }).then(function (r) {
+      busy($('hotelSend'), false);
+      if (!r.ok) return err('hotelErr', r.message);
+      loadMe(st.s);
+    });
+  });
 
   function renderDays(a) {
     var r = st.me, box = $('days'); box.innerHTML = '';
@@ -248,9 +303,9 @@
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
     ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.tel = $('tel').value.trim();
     var add = $('addBox').hidden ? '' : $('addMail').value.trim();
-    busy($('save'), true); err('saveErr', '');
+    busy($('save'), true); err('saveErr', ''); $('save').textContent = '送信しています…';
     api('save', { s: st.s, answers: ans, add_email: add, add_role: '本人' }).then(function (res) {
-      busy($('save'), false);
+      busy($('save'), false); $('save').textContent = '送信';
       if (!res.ok) {
         if (res.error === 'session') { store(''); show('stName'); return err('nameErr', res.message); }
         if (res.taken) {
@@ -283,14 +338,16 @@
     if (ev.length) {
       var ymd = function (s) { return s.replace(/-/g, ''); };
       var next = function (s) { var t = new Date(s + 'T00:00:00+09:00'); t.setDate(t.getDate() + 1); return t.getFullYear() + ('0' + (t.getMonth() + 1)).slice(-2) + ('0' + t.getDate()).slice(-2); };
-      var title = function (e) { return 'ニセコ会議 ' + e.a.t + (e.a.time ? '（' + e.a.time + '）' : ''); };
+      // 確定ではないことが分かるように（2026-10-24 小西さん指示）
+      var NOTE = '第2回アンケートでお選びいただいた内容です（仮）。人数などにより変わる場合があります。最終的な内容は1月に事務局からご連絡します。';
+      var title = function (e) { return '（仮）ニセコ会議 ' + e.a.t + (e.a.time ? ' ' + e.a.time : '') + '（1月に確定）'; };
       var ics = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//niseko-forum.com//survey2//JA'].concat(ev.map(function (e) {
         return ['BEGIN:VEVENT', 'UID:niseko2027-' + e.d.key + '-' + Date.now() + '@niseko-forum.com', 'DTSTAMP:' + new Date().toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z',
-          'DTSTART;VALUE=DATE:' + ymd(e.d.date), 'DTEND;VALUE=DATE:' + next(e.d.date), 'SUMMARY:' + title(e), 'LOCATION:ヒルトンニセコビレッジ', 'END:VEVENT'].join('\r\n');
+          'DTSTART;VALUE=DATE:' + ymd(e.d.date), 'DTEND;VALUE=DATE:' + next(e.d.date), 'SUMMARY:' + title(e), 'DESCRIPTION:' + NOTE, 'LOCATION:ヒルトンニセコビレッジ', 'END:VEVENT'].join('\r\n');
       })).concat(['END:VCALENDAR']).join('\r\n');
       $('icsLink').href = URL.createObjectURL(new Blob([ics], { type: 'text/calendar' }));
       $('gcal').innerHTML = ev.map(function (e) {
-        var u = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(title(e)) + '&dates=' + ymd(e.d.date) + '/' + next(e.d.date) + '&location=' + encodeURIComponent('ヒルトンニセコビレッジ');
+        var u = 'https://calendar.google.com/calendar/render?action=TEMPLATE&text=' + encodeURIComponent(title(e)) + '&dates=' + ymd(e.d.date) + '/' + next(e.d.date) + '&details=' + encodeURIComponent(NOTE) + '&location=' + encodeURIComponent('ヒルトンニセコビレッジ');
         return '<a href="' + u + '" target="_blank" rel="noopener">Google カレンダーに追加：' + esc(e.d.label) + '</a>';
       }).join('');
     }

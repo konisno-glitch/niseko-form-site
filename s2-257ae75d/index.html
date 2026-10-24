@@ -7,7 +7,7 @@
 <title>ニセコ会議2027 第2回アンケート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
-<link rel="stylesheet" href="base.css?v=6">
+<link rel="stylesheet" href="base.css?v=7">
 </head>
 <body>
 <div class="wrap">
@@ -32,7 +32,22 @@
     </div>
     <div class="sugg" id="cands" hidden></div>
     <p class="err" id="nameErr" hidden></p>
+    <button class="link" type="button" id="nameAskOpen" hidden>お名前が出てこないときは、こちらから事務局へご連絡ください</button>
   </div>
+  <div class="q" id="nameAskBox" hidden>
+    <p class="note">お名前が見つからない場合は、事務局で確認してご連絡します。</p>
+    <label for="askName">お名前<span class="req">*</span></label>
+    <input type="text" id="askName" autocomplete="name">
+    <label for="askCompany">会社名</label>
+    <input type="text" id="askCompany" autocomplete="organization">
+    <label for="askContact">ご連絡先（電話番号またはメールアドレス）<span class="req">*</span></label>
+    <input type="text" id="askContact" autocomplete="email">
+    <label for="askBody">ご用件（任意）</label>
+    <textarea id="askBody"></textarea>
+    <p class="err" id="nameAskErr" hidden></p>
+    <div class="row"><button class="btn" type="button" id="nameAskSend">事務局に送る</button></div>
+  </div>
+  <p class="note" id="nameAskDone" hidden>事務局に届きました。確認のうえ、事務局からご連絡します。</p>
 </section>
 
 <!-- 2. メールの確認 -->
@@ -79,20 +94,41 @@
 <!-- 4. アンケート -->
 <form id="stForm" class="stage" novalidate hidden>
   <section class="sec">
-    <h2>A. お名前</h2>
+    <h2>A. 第1回のご回答の確認</h2>
     <div class="card1">
       <strong id="meName"></strong>
       <p class="muted" id="meLead"></p>
       <dl id="meDl"></dl>
-      <p class="muted">第1回のご回答から変更がある場合は、Eの記入欄にお書きください。</p>
       <div class="note alert" id="warnBox" hidden>
         <strong>ご確認ください</strong>
         <ul id="warnList"></ul>
-        <span>訂正やご連絡があれば、下の「E. その他」にご記入ください。</span>
+        <span>行き・帰りは、下で直せます。日程・ホテルの変更は「日程・ホテルを変更したい」から事務局へご連絡ください。</span>
+      </div>
+      <div id="goBackBox">
+        <div class="q"><span class="ql">行き（2/18）<span class="req">*</span></span><div class="opts" id="o-go" role="radiogroup" aria-label="行き"></div></div>
+        <div class="q"><span class="ql">帰り（2/21）<span class="req">*</span></span><div class="opts" id="o-back" role="radiogroup" aria-label="帰り"></div></div>
+        <p class="muted">貸切バスは、行き2/18・帰り2/21の1便ずつです。</p>
+        <p class="err" id="firstErr" hidden></p>
+        <div class="row"><button class="btn" type="button" id="firstSave">この内容で次へ</button></div>
+      </div>
+      <div class="note alert" id="holdBox" hidden>
+        <strong>日程・ホテルの変更を、事務局で確認しています</strong><br>
+        ヒルトンに確認が取れ次第、事務局からご連絡します。それまで、このアンケートの続きはお待ちください。
+      </div>
+      <button type="button" class="link" id="hotelOpen">日程・ホテルを変更したい</button>
+      <div class="q" id="hotelBox" hidden>
+        <p class="note">ヒルトンの専用予約サイトでの受付は、10/25（日）で終了しました。日程やホテル（シングル・相部屋など）の変更は、事務局がヒルトンに確認したうえで承ります。変更したい内容を書いて送ってください。<span id="staffLine"></span><br><br><strong>送ると、事務局で確認が取れるまで、このアンケートの続き（B以降）にはお進みいただけません。</strong></p>
+        <label for="hotelBody">変更したい内容<span class="req">*</span></label>
+        <textarea id="hotelBody" placeholder="例：2/20に帰ることになりました。2/20の夜の宿泊を取り消したい"></textarea>
+        <label for="hotelContact">ご連絡先（電話番号またはメールアドレス）<span class="req">*</span></label>
+        <input type="text" id="hotelContact">
+        <p class="err" id="hotelErr" hidden></p>
+        <div class="row"><button class="btn" type="button" id="hotelSend">事務局に送る</button><button class="link" type="button" id="hotelCancel">やめる</button></div>
       </div>
       <button type="button" class="link" id="logout">別の方としてご回答になる場合はこちら</button>
     </div>
   </section>
+  <div id="rest" hidden>
   <section class="sec">
     <h2>B. 日ごとの過ごし方</h2>
     <p>日ごとに1つ選んでください。人数の決まっているものは先着順です。満員のものは「キャンセル待ち」で申し込めます。キャンセルが出たときや、ご希望が多く枠を増やすことになったときに、申し込み順にご案内します。</p>
@@ -155,6 +191,7 @@
     <p class="err" id="saveErr" hidden></p>
     <button class="btn" type="submit" id="save">送信</button>
   </section>
+  </div>
 </form>
 
 <!-- 5. 完了 -->
@@ -164,6 +201,7 @@
   <p id="mailed"></p>
   <div class="cal" id="calBox">
     <strong>カレンダーに追加</strong>
+    <span class="muted">カレンダーには「（仮）」として入ります。人数などにより変わる場合があり、最終的な内容は1月に事務局からご連絡します。</span>
     <a href="#" id="icsLink" download="niseko2027.ics">iPhone・Outlook のカレンダーに追加</a>
     <div id="gcal" class="cal"></div>
   </div>
@@ -173,6 +211,6 @@
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="app.js?v=7"></script>
+<script src="app.js?v=8"></script>
 </body>
 </html>
