@@ -41,7 +41,7 @@
       $('nameAskOpen').hidden = false;
       var box = $('cands'); box.innerHTML = '';
       if (!r.ok) { box.hidden = true; return err('nameErr', r.message); }
-      if (!r.candidates.length) { box.hidden = true; return err('nameErr', 'お名前が見つかりませんでした。漢字を変えてお試しいただくか、担当の事務局へご連絡ください'); }
+      if (!r.candidates.length) { box.hidden = true; return err('nameErr', 'お名前が見つかりませんでした。漢字を変えてお試しいただくか、下の「お名前が出てこないとき」から事務局へご連絡ください'); }
       r.candidates.forEach(function (c) {
         var b = document.createElement('button'); b.type = 'button';
         b.textContent = c.name + (c.company ? '（' + c.company + '）' : '');
@@ -303,7 +303,7 @@
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
     ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.tel = $('tel').value.trim();
     var add = $('addBox').hidden ? '' : $('addMail').value.trim();
-    busy($('save'), true); err('saveErr', ''); $('save').textContent = '送信しています…';
+    busy($('save'), true); err('saveErr', ''); $('save').textContent = '送信しています（数秒かかります）…';
     api('save', { s: st.s, answers: ans, add_email: add, add_role: '本人' }).then(function (res) {
       busy($('save'), false); $('save').textContent = '送信';
       if (!res.ok) {
