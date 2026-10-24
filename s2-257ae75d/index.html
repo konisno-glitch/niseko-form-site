@@ -7,7 +7,7 @@
 <title>ニセコ会議2027 第2回アンケート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
-<link rel="stylesheet" href="base.css?v=3">
+<link rel="stylesheet" href="base.css?v=4">
 </head>
 <body>
 <div class="wrap">
@@ -95,7 +95,7 @@
   </section>
   <section class="sec">
     <h2>B. 日ごとの過ごし方</h2>
-    <p>日ごとに1つ選んでください。人数の決まっているものは先着順で、満員になると選べなくなります。</p>
+    <p>日ごとに1つ選んでください。人数の決まっているものは先着順です。満員のものは「キャンセル待ち」で申し込めます。キャンセルが出たときや、ご希望が多く枠を増やすことになったときに、申し込み順にご案内します。</p>
     <div id="days"></div>
     <p class="muted" id="noDays" hidden>第1回のご回答の日程では、アクティビティのある日（2/19・2/20）のご滞在がありません。変更がある場合はEにお書きください。</p>
     <div class="note">
@@ -131,16 +131,21 @@
     <h2>E. その他</h2>
     <div class="q">
       <label for="memo">第1回のご回答からの変更、食事の制限、ご要望など</label>
-      <textarea id="memo" placeholder="満員の選択肢を希望される方も、こちらにお書きください"></textarea>
+      <textarea id="memo"></textarea>
+    </div>
+    <div class="q">
+      <label for="tel">ご本人の携帯電話番号（当日のご連絡用）<span class="req">*</span></label>
+      <input type="tel" id="tel" autocomplete="tel" inputmode="tel" placeholder="例：090-1234-5678">
+      <p class="muted">Messenger をお使いでない方とも当日に連絡が取れるよう、全員に伺っています。事務局だけが見られる名簿に保存します。</p>
     </div>
     <div class="q">
       <span class="ql">確認メールの送り先</span>
       <ul id="mailList" class="muted" style="margin:0;padding-left:1.2em"></ul>
     </div>
     <div class="q" id="addBox" hidden>
-      <label for="addMail" id="addLabel">ご本人のアドレスも登録しますか（任意）</label>
+      <label for="addMail" id="addLabel">ご本人のメールアドレス<span class="req">*</span></label>
       <input type="email" id="addMail" autocomplete="email" placeholder="例：name@example.co.jp">
-      <p class="muted" id="addNote">登録すると、ご回答内容の確認メールがこのアドレスにも届きます。</p>
+      <p class="muted" id="addNote">秘書・ご担当者の方がご回答の場合も、ご本人のアドレスを伺っています。ご回答内容の確認メールは、ご本人にもお送りします。</p>
     </div>
     <div class="note warn">
       <strong>ご注意ください</strong><br>
@@ -168,6 +173,6 @@
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>
