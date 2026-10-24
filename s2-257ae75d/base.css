@@ -74,7 +74,7 @@ textarea{min-height:84px;resize:vertical}
 .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
 .btn[disabled]{opacity:.5;cursor:wait}
 .btn.sub{background:transparent;color:var(--accent);border:1px solid var(--accent)}
-input[type=email],input[inputmode=numeric]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box}
+input[type=email],input[type=tel],input[inputmode=numeric]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box}
 input.code{font-size:1.4rem;letter-spacing:.3em;font-variant-numeric:tabular-nums;max-width:12em}
 .help{font-size:.85rem;border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
 .addr{font-variant-numeric:tabular-nums}
