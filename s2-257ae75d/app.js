@@ -195,7 +195,7 @@
         var full = isFull(d.key, x, held), on = sel === x.id;
         var left = x.cap ? x.cap - ((r.taken[d.key] || {})[x.id] || 0) : null;
         html += '<label class="opt' + (full ? ' wait' : '') + '"><input type="radio" name="' + d.key + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
-          '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (x.cap ? '<span class="left">' + (held === x.id ? 'お申し込み済み' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちで申し込めます') : '残り' + left + '名') + '</span>' : '') + '</span>' +
+          '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (x.cap ? '<span class="left">' + (held === x.id ? 'お申し込み済み' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名') + '</span>' : '') + '</span>' +
           ((x.info.length || x.cap) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + x.min + '〜' + x.cap + '名</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + esc(kv[1]) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
       });
       html += '</div>';
