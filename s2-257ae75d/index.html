@@ -7,7 +7,7 @@
 <title>ニセコ会議2027 第2回アンケート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
-<link rel="stylesheet" href="base.css?v=7">
+<link rel="stylesheet" href="base.css?v=8">
 </head>
 <body>
 <div class="wrap">
@@ -107,7 +107,7 @@
       <div id="goBackBox">
         <div class="q"><span class="ql">行き（2/18）<span class="req">*</span></span><div class="opts" id="o-go" role="radiogroup" aria-label="行き"></div></div>
         <div class="q"><span class="ql">帰り（2/21）<span class="req">*</span></span><div class="opts" id="o-back" role="radiogroup" aria-label="帰り"></div></div>
-        <p class="muted">貸切バスは、行き2/18・帰り2/21の1便ずつです。</p>
+        <p class="muted">貸切バスは1便ずつです。行き：2/18（木）新千歳空港 11:15発（ホテル14:00着）。帰り：2/21（日）ホテル10時ごろ発（時刻は調整中）。乗車費は6,000円（税別・調整中）です。</p>
         <p class="err" id="firstErr" hidden></p>
         <div class="row"><button class="btn" type="button" id="firstSave">この内容で次へ</button></div>
       </div>
@@ -134,6 +134,7 @@
     <p>日ごとに1つ選んでください。人数の決まっているものは先着順です。満員のものは「キャンセル待ち」で申し込めます。キャンセルが出たときや、ご希望が多く枠を増やすことになったときに、申し込み順にご案内します。</p>
     <div id="days"></div>
     <p class="muted" id="noDays" hidden>第1回のご回答の日程では、アクティビティのある日（2/19・2/20）のご滞在がありません。変更がある場合はEにお書きください。</p>
+    <div class="q" id="njBox" hidden><span class="ql">2/18（木）前夜祭のあとの二次会に参加されますか<span class="req">*</span></span><div class="opts" id="o-nj" role="radiogroup" aria-label="前夜祭のあとの二次会"></div></div>
     <div class="note">
       <strong>キャンセルされた場合</strong><br>
       その日は「自分たちで滑る」か「自分で過ごす」に変わります。1/31（日）までにご連絡いただければ、空きのある別のアクティビティへの変更をご相談できます。キャンセル料は各選択肢に書いたとおりです。<br><br><strong>最少人数に届かなかった場合</strong><br>そのアクティビティは中止とし、締切後にご連絡します。空きのある別のアクティビティへの変更をご相談できます。
@@ -144,6 +145,8 @@
     <div class="q"><span class="ql">種目<span class="req">*</span></span><div class="opts" id="o-kind" role="radiogroup" aria-label="種目"></div></div>
     <div class="q"><span class="ql">レベル<span class="req">*</span></span><div class="opts" id="o-level" role="radiogroup" aria-label="レベル"></div></div>
     <div class="q"><span class="ql">性別<span class="req">*</span></span><div class="opts" id="o-sex" role="radiogroup" aria-label="性別"></div></div>
+    <p class="muted">初心者：ほとんど滑れない方、初めての方</p>
+    <div class="q" id="avBox" hidden><span class="ql">バックカントリーのアバランチセット（ビーコン・プローブ・ショベル）<span class="req">*</span></span><div class="opts" id="o-av" role="radiogroup" aria-label="アバランチセット"></div></div>
     <p class="note">板・ブーツ・ヘルメットのレンタルは、各自でご手配ください。ヘルメットは全員着用です。</p>
   </section>
   <section class="sec">
@@ -157,9 +160,14 @@
     <div id="famBox" class="q" hidden>
       <label for="famN">人数</label>
       <select id="famN"><option>1名</option><option>2名</option><option>3名以上</option></select>
+      <span class="ql">食事会に参加される同伴者の人数</span>
+      <div id="famMeals" class="meals"></div>
+      <label for="famKids">同伴者のうち、小学生以下の人数</label>
+      <select id="famKids"><option value="0">0名</option><option value="1">1名</option><option value="2">2名</option><option value="3">3名</option><option value="4">4名</option></select>
+      <p class="muted">食事会の料金は、事務局で確認しています。後日ご案内します。</p>
       <label for="famWish">日ごとにやりたいこと</label>
       <textarea id="famWish" placeholder="例：妻 2/19はスキー（班）、2/20はニッカ希望。両日とも懇親会に参加"></textarea>
-      <div class="note">料金は参加者と同じです。スキー・スノボ（班で滑る）だけ、1日10,000円かかります。</div>
+      <div class="note">アクティビティの料金は参加者と同じです。スキー・スノボ（班で滑る）は、1日10,000円かかります。</div>
       <div class="note warn">定員のあるアクティビティは、他の参加者の方が優先です。ご希望に沿えるかは、会期の10営業日前ごろにお知らせします。</div>
     </div>
   </section>
@@ -211,6 +219,6 @@
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="app.js?v=9"></script>
+<script src="app.js?v=10"></script>
 </body>
 </html>

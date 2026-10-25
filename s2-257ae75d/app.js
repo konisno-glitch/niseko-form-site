@@ -195,7 +195,14 @@
     $('rest').hidden = !me.confirmed || me.hold;
     renderDays(a);
     radios('o-kind', 'kind', ['スキー', 'スノーボード'], a.kind);
-    radios('o-level', 'level', ['初級', '中級', '上級', 'エキスパート'], a.level);
+    radios('o-level', 'level', r.levels, a.level);
+    radios('o-av', 'avalanche', r.avalancheOpts, a.avalanche);
+    radios('o-nj', 'nijikai', r.nijikaiOpts, a.nijikai);
+    $('njBox').hidden = !me.nijikai;
+    $('famMeals').innerHTML = r.famMeals.map(function (m) {
+      return '<label for="' + m.key + '">' + esc(m.label) + '</label><select id="' + m.key + '">' + [0, 1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (String(a[m.key] || 0) === String(n) ? ' selected' : '') + '>' + n + '名</option>'; }).join('') + '</select>';
+    }).join('');
+    $('famKids').value = a.famKids || '0';
     radios('o-sex', 'sex', ['男性', '女性'], a.sex);
     document.querySelectorAll('input[name=fam]').forEach(function (i) { i.checked = i.value === a.fam; });
     $('famN').value = a.famN || '1名'; $('famWish').value = a.famWish || ''; $('memo').value = a.memo || ''; $('tel').value = a.tel || '';
@@ -289,7 +296,8 @@
       var fb = $('fb-' + d); if (fb) fb.hidden = !c.w;
       return (x && x.ski) || (w && w.ski);
     });
-    $('secC').hidden = !ski;
+    var bc = r.me.days.some(function (d) { var c = choice(d), x = act(c.c), w = act(c.w); return (x && x.avalanche) || (w && w.avalanche); });
+    $('secC').hidden = !ski; $('avBox').hidden = !bc;
   }
   document.querySelectorAll('input[name=fam]').forEach(function (i) { i.addEventListener('change', function () { $('famBox').hidden = i.value !== 'yes' || !i.checked; }); });
 
@@ -299,8 +307,10 @@
     r.me.days.forEach(function (d) { var c = choice(d); ans[d] = c.c; ans[d + '_w'] = c.w; });
     var miss = r.me.days.filter(function (d) { return ans[d + '_w'] && !ans[d]; });
     if (miss.length) return err('saveErr', miss.map(function (d) { return r.dayDefs.filter(function (x) { return x.key === d; })[0].label; }).join('、') + 'の、空きが出なかったときの過ごし方を選んでください');
-    ['kind', 'level', 'sex', 'fam'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
+    ['kind', 'level', 'sex', 'fam', 'avalanche', 'nijikai'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
+    r.famMeals.forEach(function (m) { ans[m.key] = $(m.key).value; }); ans.famKids = $('famKids').value;
+    if ($('avBox').hidden) ans.avalanche = '';
     ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.tel = $('tel').value.trim();
     var add = $('addBox').hidden ? '' : $('addMail').value.trim();
     busy($('save'), true); err('saveErr', ''); $('save').textContent = '送信しています（数秒かかります）…';

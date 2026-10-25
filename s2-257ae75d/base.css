@@ -46,6 +46,8 @@ textarea{min-height:84px;resize:vertical}
 .wait .left{color:var(--warn)}
 .fb{border:1px dashed var(--warn);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
 .fb .ql{color:var(--warn)}
+.meals{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.meals select{width:auto}
 .opt.full .s,.opt.full dl{color:var(--full)}
 .left{font-variant-numeric:tabular-nums;font-size:.78rem;color:var(--accent);white-space:nowrap}
 .full .left{color:var(--full)}
