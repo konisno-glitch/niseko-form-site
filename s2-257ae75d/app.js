@@ -198,6 +198,7 @@
     radios('o-level', 'level', r.levels, a.level);
     radios('o-av', 'avalanche', r.avalancheOpts, a.avalanche);
     radios('o-nj', 'nijikai', r.nijikaiOpts, a.nijikai);
+    radios('o-alc', 'alcohol', r.alcoholOpts, a.alcohol);
     $('njBox').hidden = !me.nijikai;
     $('famMeals').innerHTML = r.famMeals.map(function (m) {
       return '<label for="' + m.key + '">' + esc(m.label) + '</label><select id="' + m.key + '">' + [0, 1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (String(a[m.key] || 0) === String(n) ? ' selected' : '') + '>' + n + '名</option>'; }).join('') + '</select>';
@@ -307,7 +308,7 @@
     r.me.days.forEach(function (d) { var c = choice(d); ans[d] = c.c; ans[d + '_w'] = c.w; });
     var miss = r.me.days.filter(function (d) { return ans[d + '_w'] && !ans[d]; });
     if (miss.length) return err('saveErr', miss.map(function (d) { return r.dayDefs.filter(function (x) { return x.key === d; })[0].label; }).join('、') + 'の、空きが出なかったときの過ごし方を選んでください');
-    ['kind', 'level', 'sex', 'fam', 'avalanche', 'nijikai'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
+    ['kind', 'level', 'sex', 'fam', 'avalanche', 'nijikai', 'alcohol'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
     r.famMeals.forEach(function (m) { ans[m.key] = $(m.key).value; }); ans.famKids = $('famKids').value;
     if ($('avBox').hidden) ans.avalanche = '';
