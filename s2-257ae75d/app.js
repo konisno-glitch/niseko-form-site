@@ -253,23 +253,36 @@
       var held = (r.answer || {})[d.key] || '', savedW = (r.answer || {})[d.key + '_w'] || '', sel = a[d.key + '_w'] || a[d.key] || '';
       var el = document.createElement('div'); el.className = 'day'; el.dataset.d = d.key;
       var html = '<h3>' + esc(d.label) + '</h3><div class="opts" role="radiogroup" aria-label="' + esc(d.label) + 'の過ごし方">', last = '';
-      r.acts.forEach(function (x) {
+      acts(d.key).forEach(function (x) {
         if (x.g !== last) { html += '<div class="grp">' + esc(x.g) + '</div>'; last = x.g; }
-        var full = isFull(d.key, x, held), on = sel === x.id;
-        var left = x.cap ? x.cap - ((r.taken[d.key] || {})[x.id] || 0) : null;
+        var full = isFull(d.key, x, held), on = sel === x.id, lim = limited(x);
+        var left = lim ? leftOf(d.key, x) : null;
         html += '<label class="opt' + (full ? ' wait' : '') + '"><input type="radio" name="' + d.key + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
-          '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (x.cap ? '<span class="left">' + (held === x.id ? 'お申し込み済み' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名') + '</span>' : '') + '</span>' +
-          ((x.info.length || x.cap) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + x.min + '〜' + x.cap + '名</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + esc(kv[1]) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
+          '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (lim ? '<span class="left">' + (held === x.id ? 'お申し込み済み' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名') + '</span>' : '') + '</span>' +
+          ((x.info.length || lim) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + (x.min ? x.min + '〜' : '') + x.cap + '名</dd>' : '') + (x.pool && r.pools[x.pool].cap ? '<dt>お店の席</dt><dd>' + esc(r.pools[x.pool].t) + ' ' + r.pools[x.pool].cap + '名（同じお店の組の合計）</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + esc(kv[1]) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
       });
       html += '</div>';
       // キャンセル待ちを選んだときだけ、空きが出なかったときの過ごし方を選んでもらう
       var fbVal = a[d.key + '_w'] ? a[d.key] : '';
       html += '<div class="fb" id="fb-' + d.key + '" hidden><span class="ql">キャンセル待ちのため、空きが出なかったときの過ごし方も選んでください<span class="req">*</span></span><div class="opts" role="radiogroup" aria-label="' + esc(d.label) + 'の空きが出なかったときの過ごし方">';
-      r.acts.forEach(function (x) {
+      acts(d.key).forEach(function (x) {
         if (isFull(d.key, x, held)) return;
         html += '<label class="opt"><input type="radio" name="' + d.key + '_f" value="' + x.id + '"' + (fbVal === x.id ? ' checked' : '') + '><span class="t">' + esc(x.t) + '</span></label>';
       });
-      el.innerHTML = html + '</div></div>';
+      html += '</div></div>';
+      // ランチだけ（スキー・スノボなどを選んだ日だけ出す）（2026-10-27 白井さん）
+      var lk = r.lunch[d.key] || [], lv = a[d.key + '_l'] || '', heldL = (r.answer || {})[d.key + '_l'] || '';
+      if (lk.length) {
+        html += '<div class="q" id="lb-' + d.key + '" hidden><span class="ql">ランチだけ参加しますか</span><p class="muted">' + esc(r.lunchNote) + '</p><div class="opts" role="radiogroup" aria-label="' + esc(d.label) + 'のランチ">' +
+          '<label class="opt"><input type="radio" name="' + d.key + '_l" value=""' + (!lv ? ' checked' : '') + '><span class="t">参加しない</span></label>';
+        lk.forEach(function (k) {
+          var p = r.pools[k], left = p.cap ? p.cap - ((r.taken[d.key] || {})['pool:' + k] || 0) - ((r.taken[d.key] || {})['lunch:' + k] || 0) : null, full = left !== null && left <= 0 && heldL !== k;
+          html += '<label class="opt' + (full ? ' wait' : '') + '"><input type="radio" name="' + d.key + '_l" value="' + k + '"' + (lv === k ? ' checked' : '') + (full ? ' disabled' : '') + '><span class="t"><span class="name"><span>' + esc(p.t) + '</span>' +
+            (left !== null ? '<span class="left">' + (heldL === k ? 'お申し込み済み' : full ? '満席' : '残り' + left + '名') + '</span>' : '') + '</span></span></label>';
+        });
+        html += '</div></div>';
+      }
+      el.innerHTML = html + '</div>';
       box.appendChild(el);
     });
     box.querySelectorAll('input').forEach(function (i) { i.addEventListener('change', skiRule); });
@@ -277,9 +290,18 @@
 
   // 満員か（自分が席を持っているものは満員にしない）
   function isFull(dk, x, held) {
-    if (!x.cap) return false;
-    var left = x.cap - ((st.me.taken[dk] || {})[x.id] || 0);
-    return left <= 0 && held !== x.id;
+    if (!limited(x)) return false;
+    return leftOf(dk, x) <= 0 && held !== x.id;
+  }
+  function acts(dk) { return st.me.acts.filter(function (x) { return !x.days || x.days.indexOf(dk) >= 0; }); }
+  function limited(x) { return !!(x.cap || (x.pool && st.me.pools[x.pool].cap)); }
+  // お店の席はアクティビティの参加者だけで数える（ランチだけの方より優先）
+  function leftOf(dk, x) {
+    var t = st.me.taken[dk] || {}, out = null;
+    if (x.cap) out = x.cap - (t[x.id] || 0);
+    var p = x.pool && st.me.pools[x.pool];
+    if (p && p.cap) { var l = p.cap - (t['pool:' + x.pool] || 0); out = out === null ? l : Math.min(out, l); }
+    return out;
   }
   function act(id) { return st.me.acts.filter(function (a) { return a.id === id; })[0]; }
   function radio(name) { var c = document.querySelector('input[name=' + name + ']:checked'); return c ? c.value : ''; }
@@ -295,6 +317,7 @@
     var ski = r.me.days.some(function (d) {
       var c = choice(d), x = act(c.c), w = act(c.w);
       var fb = $('fb-' + d); if (fb) fb.hidden = !c.w;
+      var lb = $('lb-' + d); if (lb) lb.hidden = !(x && x.lunchOk);
       return (x && x.ski) || (w && w.ski);
     });
     var bc = r.me.days.some(function (d) { var c = choice(d), x = act(c.c), w = act(c.w); return (x && x.avalanche) || (w && w.avalanche); });
@@ -305,7 +328,10 @@
   $('stForm').addEventListener('submit', function (e) {
     e.preventDefault();
     var r = st.me, ans = {};
-    r.me.days.forEach(function (d) { var c = choice(d); ans[d] = c.c; ans[d + '_w'] = c.w; });
+    r.me.days.forEach(function (d) {
+      var c = choice(d); ans[d] = c.c; ans[d + '_w'] = c.w;
+      var lb = $('lb-' + d); ans[d + '_l'] = lb && !lb.hidden ? radio(d + '_l') : '';
+    });
     var miss = r.me.days.filter(function (d) { return ans[d + '_w'] && !ans[d]; });
     if (miss.length) return err('saveErr', miss.map(function (d) { return r.dayDefs.filter(function (x) { return x.key === d; })[0].label; }).join('、') + 'の、空きが出なかったときの過ごし方を選んでください');
     ['kind', 'level', 'sex', 'fam', 'avalanche', 'nijikai', 'alcohol'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
@@ -324,7 +350,7 @@
           var keep = {}; r.me.days.forEach(function (d) { var c = choice(d); keep[d] = c.w || c.c; });
           st.me.taken = res.taken;
           var a2 = Object.assign({}, st.me.answer || {});
-          r.me.days.forEach(function (d) { a2[d + '_w'] = ''; a2[d] = keep[d]; });
+          r.me.days.forEach(function (d) { a2[d + '_w'] = ''; a2[d] = keep[d]; var lb = $('lb-' + d); a2[d + '_l'] = lb && !lb.hidden ? radio(d + '_l') : ''; });
           renderDays(a2); skiRule();
         }
         return err('saveErr', res.message);
