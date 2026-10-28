@@ -200,10 +200,11 @@
     radios('o-nj', 'nijikai', r.nijikaiOpts, a.nijikai);
     radios('o-alc', 'alcohol', r.alcoholOpts, a.alcohol);
     $('njBox').hidden = !me.nijikai;
-    $('famMeals').innerHTML = r.famMeals.map(function (m) {
-      return '<label for="' + m.key + '">' + esc(m.label) + '</label><select id="' + m.key + '">' + [0, 1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (String(a[m.key] || 0) === String(n) ? ' selected' : '') + '>' + n + '名</option>'; }).join('') + '</select>';
+    // 食事会ごとに、人数とそのうち未就学児の人数（2026-10-28 小西さん指摘）
+    var sel = function (id, v) { return '<select id="' + id + '" aria-label="' + id + '">' + [0, 1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (String(v || 0) === String(n) ? ' selected' : '') + '>' + n + '名</option>'; }).join('') + '</select>'; };
+    $('famMeals').innerHTML = '<span></span><span class="mh">人数</span><span class="mh">うち未就学児</span>' + r.famMeals.map(function (m) {
+      return '<label for="' + m.key + '">' + esc(m.label) + '</label>' + sel(m.key, a[m.key]) + (m.kid ? sel(m.kid, a[m.kid]) : '<span class="muted">―</span>');
     }).join('');
-    $('famKids').value = a.famKids || '0';
     radios('o-sex', 'sex', ['男性', '女性'], a.sex);
     document.querySelectorAll('input[name=fam]').forEach(function (i) { i.checked = i.value === a.fam; });
     $('famN').value = a.famN || '1名'; $('famWish').value = a.famWish || ''; $('memo').value = a.memo || ''; $('tel').value = a.tel || '';
@@ -273,11 +274,11 @@
       // ランチだけ（スキー・スノボなどを選んだ日だけ出す）（2026-10-27 白井さん）
       var lk = r.lunch[d.key] || [], lv = a[d.key + '_l'] || '', heldL = (r.answer || {})[d.key + '_l'] || '';
       if (lk.length) {
-        html += '<div class="q" id="lb-' + d.key + '" hidden><span class="ql">ランチだけ参加しますか</span><p class="muted">' + esc(r.lunchNote) + '</p><div class="opts" role="radiogroup" aria-label="' + esc(d.label) + 'のランチ">' +
+        html += '<div class="q lunch" id="lb-' + d.key + '"><span class="ql">お昼だけ合流（' + esc(d.label) + '）</span><p class="muted">' + esc(r.lunchNote) + '</p><p class="muted" id="lbOff-' + d.key + '" hidden>上でアクティビティやバックカントリーを選んだ方は、お昼はそちらに含まれます。</p><div class="opts" role="radiogroup" aria-label="' + esc(d.label) + 'のランチ">' +
           '<label class="opt"><input type="radio" name="' + d.key + '_l" value=""' + (!lv ? ' checked' : '') + '><span class="t">参加しない</span></label>';
         lk.forEach(function (k) {
           var p = r.pools[k], left = p.cap ? p.cap - ((r.taken[d.key] || {})['pool:' + k] || 0) - ((r.taken[d.key] || {})['lunch:' + k] || 0) : null, full = left !== null && left <= 0 && heldL !== k;
-          html += '<label class="opt' + (full ? ' wait' : '') + '"><input type="radio" name="' + d.key + '_l" value="' + k + '"' + (lv === k ? ' checked' : '') + (full ? ' disabled' : '') + '><span class="t"><span class="name"><span>' + esc(p.t) + '</span>' +
+          html += '<label class="opt' + (full ? ' wait' : '') + '"><input type="radio" name="' + d.key + '_l" value="' + k + '"' + (lv === k ? ' checked' : '') + (full ? ' disabled data-full="1"' : '') + '><span class="t"><span class="name"><span>' + esc(p.t) + '</span>' +
             (left !== null ? '<span class="left">' + (heldL === k ? 'お申し込み済み' : full ? '満席' : '残り' + left + '名') + '</span>' : '') + '</span></span></label>';
         });
         html += '</div></div>';
@@ -317,7 +318,12 @@
     var ski = r.me.days.some(function (d) {
       var c = choice(d), x = act(c.c), w = act(c.w);
       var fb = $('fb-' + d); if (fb) fb.hidden = !c.w;
-      var lb = $('lb-' + d); if (lb) lb.hidden = !(x && x.lunchOk);
+      // お昼だけ合流は、スキー・スノボ（班・自分たち）と自分で過ごす日だけ選べる。ほかは選べない表示にする
+      var lb = $('lb-' + d), ok = !!(x && x.lunchOk);
+      if (lb) {
+        lb.classList.toggle('off', !ok); $('lbOff-' + d).hidden = ok || !x;
+        lb.querySelectorAll('input').forEach(function (i) { i.disabled = !ok || i.dataset.full === '1'; if (!ok && i.value === '') i.checked = true; });
+      }
       return (x && x.ski) || (w && w.ski);
     });
     var bc = r.me.days.some(function (d) { var c = choice(d), x = act(c.c), w = act(c.w); return (x && x.avalanche) || (w && w.avalanche); });
@@ -330,13 +336,13 @@
     var r = st.me, ans = {};
     r.me.days.forEach(function (d) {
       var c = choice(d); ans[d] = c.c; ans[d + '_w'] = c.w;
-      var lb = $('lb-' + d); ans[d + '_l'] = lb && !lb.hidden ? radio(d + '_l') : '';
+      var lb = $('lb-' + d); ans[d + '_l'] = lb && !lb.classList.contains('off') ? radio(d + '_l') : '';
     });
     var miss = r.me.days.filter(function (d) { return ans[d + '_w'] && !ans[d]; });
     if (miss.length) return err('saveErr', miss.map(function (d) { return r.dayDefs.filter(function (x) { return x.key === d; })[0].label; }).join('、') + 'の、空きが出なかったときの過ごし方を選んでください');
     ['kind', 'level', 'sex', 'fam', 'avalanche', 'nijikai', 'alcohol'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
-    r.famMeals.forEach(function (m) { ans[m.key] = $(m.key).value; }); ans.famKids = $('famKids').value;
+    r.famMeals.forEach(function (m) { ans[m.key] = $(m.key).value; if (m.kid) ans[m.kid] = $(m.kid).value; });
     if ($('avBox').hidden) ans.avalanche = '';
     ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.tel = $('tel').value.trim();
     var add = $('addBox').hidden ? '' : $('addMail').value.trim();
@@ -350,7 +356,7 @@
           var keep = {}; r.me.days.forEach(function (d) { var c = choice(d); keep[d] = c.w || c.c; });
           st.me.taken = res.taken;
           var a2 = Object.assign({}, st.me.answer || {});
-          r.me.days.forEach(function (d) { a2[d + '_w'] = ''; a2[d] = keep[d]; var lb = $('lb-' + d); a2[d + '_l'] = lb && !lb.hidden ? radio(d + '_l') : ''; });
+          r.me.days.forEach(function (d) { a2[d + '_w'] = ''; a2[d] = keep[d]; var lb = $('lb-' + d); a2[d + '_l'] = lb && !lb.classList.contains('off') ? radio(d + '_l') : ''; });
           renderDays(a2); skiRule();
         }
         return err('saveErr', res.message);

@@ -46,7 +46,10 @@ textarea{min-height:84px;resize:vertical}
 .wait .left{color:var(--warn)}
 .fb{border:1px dashed var(--warn);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
 .fb .ql{color:var(--warn)}
-.meals{display:grid;grid-template-columns:1fr auto;gap:6px 12px;align-items:center}
+.meals{display:grid;grid-template-columns:1fr auto auto;gap:6px 12px;align-items:center}
+.meals .mh{font-size:12px;color:#5b6475}
+.q.lunch{border-top:1px dashed #c9d1dd;padding-top:10px;margin-top:10px}
+.q.lunch.off{opacity:.55}
 .meals select{width:auto}
 .opt.full .s,.opt.full dl{color:var(--full)}
 .left{font-variant-numeric:tabular-nums;font-size:.78rem;color:var(--accent);white-space:nowrap}
