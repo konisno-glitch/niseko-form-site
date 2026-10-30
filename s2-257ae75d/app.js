@@ -186,7 +186,7 @@
     $('warnList').innerHTML = f.warns.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('');
     // A：行き・帰りはここで直せる。日程・ホテルは事務局へ連絡（2026-10-24 小西さん指示）
     radios('o-go', 'go', ['貸切バス', '自前'], ['貸切バス', '自前'].indexOf(f.go) >= 0 ? f.go : '');
-    radios('o-back', 'back', ['貸切バス', '自前'], ['貸切バス', '自前'].indexOf(f.back) >= 0 ? f.back : '');
+    radios('o-back', 'back', r.backOpts, r.backOpts.indexOf(f.back) >= 0 ? f.back : '');
     $('firstSave').textContent = me.confirmed ? '行き・帰りの変更を保存' : 'この内容で次へ';
     $('goBackBox').hidden = me.hold; $('holdBox').hidden = !me.hold;
     $('hotelOpen').hidden = me.hold; $('hotelBox').hidden = true;
@@ -199,6 +199,7 @@
     radios('o-av', 'avalanche', r.avalancheOpts, a.avalanche);
     radios('o-nj', 'nijikai', r.nijikaiOpts, a.nijikai);
     radios('o-alc', 'alcohol', r.alcoholOpts, a.alcohol);
+    radios('o-famway', 'famWay', r.famWays, a.famWay);
     $('njBox').hidden = !me.nijikai;
     // 食事会ごとに、人数とそのうち未就学児の人数（2026-10-28 小西さん指摘）
     var sel = function (id, v) { return '<select id="' + id + '" aria-label="' + id + '">' + [0, 1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (String(v || 0) === String(n) ? ' selected' : '') + '>' + n + '名</option>'; }).join('') + '</select>'; };
@@ -340,7 +341,7 @@
     });
     var miss = r.me.days.filter(function (d) { return ans[d + '_w'] && !ans[d]; });
     if (miss.length) return err('saveErr', miss.map(function (d) { return r.dayDefs.filter(function (x) { return x.key === d; })[0].label; }).join('、') + 'の、空きが出なかったときの過ごし方を選んでください');
-    ['kind', 'level', 'sex', 'fam', 'avalanche', 'nijikai', 'alcohol'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
+    ['kind', 'level', 'sex', 'fam', 'famWay', 'avalanche', 'nijikai', 'alcohol'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
     r.famMeals.forEach(function (m) { ans[m.key] = $(m.key).value; if (m.kid) ans[m.kid] = $(m.kid).value; });
     if ($('avBox').hidden) ans.avalanche = '';
