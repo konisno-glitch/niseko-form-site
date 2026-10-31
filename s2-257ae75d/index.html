@@ -7,7 +7,7 @@
 <title>ニセコ会議2027 第2回アンケート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
-<link rel="stylesheet" href="base.css?v=12">
+<link rel="stylesheet" href="base.css?v=13">
 </head>
 <body>
 <div class="wrap">
@@ -129,7 +129,8 @@
   <!-- 2/19・2/20 の日付のすぐ下に出す注意（2026-10-31 小西さん指示） -->
   <template id="dayNote">
     <div class="note">
-      日ごとに1つ選んでください。人数の決まっているものは先着順です。アクティビティの送迎は参加費に含みます。途中から別のアクティビティやランチに合流される場合の移動費（タクシー代など）は、ご自身のご負担です。満員のものは「キャンセル待ち」で申し込めます。キャンセルが出たときや、ご希望が多く枠を増やすことになったときに、申し込み順にご案内します。<br><br>
+      <strong>アクティビティの選択</strong><br>
+      人数の決まっているものは先着順です。アクティビティの送迎は参加費に含みます。途中から別のアクティビティやランチに合流される場合の移動費（タクシー代など）は、ご自身のご負担です。満員のものは「キャンセル待ち」で申し込めます。キャンセルが出たときや、ご希望が多く枠を増やすことになったときに、申し込み順にご案内します。<br><br>
       <strong>キャンセルされた場合</strong><br>
       その日は「自分たちで滑る」か「自分で過ごす」に変わります。1/31（日）までにご連絡いただければ、空きのある別のアクティビティへの変更をご相談できます。キャンセル料は各選択肢に書いたとおりです（「確認中」のものは、決まりしだいお知らせします）。<br><br>
       <strong>最少人数に届かなかった場合</strong><br>
@@ -141,12 +142,12 @@
     <div class="q"><span class="ql">種目<span class="req">*</span></span><div class="opts" id="o-kind" role="radiogroup" aria-label="種目"></div></div>
     <div class="q"><span class="ql">レベル<span class="req">*</span></span><div class="opts" id="o-level" role="radiogroup" aria-label="レベル"></div></div>
     <div class="q"><span class="ql">性別<span class="req">*</span></span><div class="opts" id="o-sex" role="radiogroup" aria-label="性別"></div></div>
-    <p class="muted">初心者：ほとんど滑れない方、初めての方</p>
     <div class="q" id="avBox" hidden><span class="ql">バックカントリーのアバランチセット（ビーコン・プローブ・ショベル）<span class="req">*</span></span><div class="opts" id="o-av" role="radiogroup" aria-label="アバランチセット"></div></div>
     <p class="note">板・ブーツ・ヘルメットのレンタルは、各自でご手配ください。ヘルメットは全員着用です。レンタルの方法やリフト券の買い方は、会期の直前にご案内します。</p>
   </section>
   <section class="sec">
-    <h2>D. 同伴者（ご家族など）</h2>
+    <h2>D. 同伴者（会議に参加されないご家族など）</h2>
+    <p class="muted">会議に参加される同僚の方などは、ご本人が参加者として登録されています。その方のことはここには含めず、ご本人に回答をお願いします。</p>
     <div class="q"><span class="ql">同伴者はいますか<span class="req">*</span></span>
       <div class="opts" role="radiogroup" aria-label="同伴者">
         <label class="opt"><input type="radio" name="fam" value="no"><span class="t">いない</span></label>
@@ -154,12 +155,14 @@
       </div>
     </div>
     <div id="famBox" class="q" hidden>
-      <div class="q"><span class="ql">参加のしかた<span class="req">*</span></span><div class="opts" id="o-famway" role="radiogroup" aria-label="同伴者の参加のしかた"></div></div>
       <label for="famN">人数</label>
       <select id="famN"><option>1名</option><option>2名</option><option>3名以上</option></select>
       <span class="ql">食事会に参加される同伴者の人数</span>
       <div id="famMeals" class="meals"></div>
       <p class="muted">懇親会だけ参加される方の食事会の料金は、1回 12,000〜15,000円（税込）の予定です（参加される日によって異なるため、決まりしだいご案内します）。未就学児は 4,000円（税込）です。</p>
+      <div class="q"><span class="ql">同伴者に、食べ物のアレルギーはありますか<span class="req">*</span></span><div class="opts" id="o-allergy" role="radiogroup" aria-label="同伴者のアレルギー"></div>
+        <div id="allergyBox" hidden><label for="famAllergyBody">アレルギーの内容（どなたが・何に）<span class="req">*</span></label><textarea id="famAllergyBody" placeholder="例：長男 えび・かに"></textarea></div>
+      </div>
       <label for="famWish">日ごとにやりたいこと</label>
       <textarea id="famWish" placeholder="例：妻 2/19はスキー（班）、2/20はニッカ希望。両日とも懇親会に参加"></textarea>
       <div class="note warn">
@@ -216,6 +219,6 @@
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="app.js?v=17"></script>
+<script src="app.js?v=18"></script>
 </body>
 </html>

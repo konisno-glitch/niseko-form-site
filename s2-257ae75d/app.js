@@ -191,10 +191,15 @@
     $('rest').hidden = me.hold;
     renderDays(a);
     radios('o-kind', 'kind', ['スキー', 'スノーボード'], a.kind);
-    radios('o-level', 'level', r.levels, a.level);
+    // レベルは目安を添えて（2026-10-31 小西さん指示）
+    $('o-level').innerHTML = r.levels.map(function (v) {
+      return '<label class="opt"><input type="radio" name="level" value="' + esc(v) + '"' + (v === a.level ? ' checked' : '') + '><span class="t">' + esc(v) + (r.levelNotes[v] ? '<span class="s">' + esc(r.levelNotes[v]) + '</span>' : '') + '</span></label>';
+    }).join('');
     radios('o-av', 'avalanche', r.avalancheOpts, a.avalanche);
     radios('o-alc', 'alcohol', r.alcoholOpts, a.alcohol);
-    radios('o-famway', 'famWay', r.famWays, a.famWay);
+    radios('o-allergy', 'famAllergy', r.allergyOpts, a.famAllergy);
+    $('famAllergyBody').value = a.famAllergyBody || ''; $('allergyBox').hidden = a.famAllergy !== 'ある';
+    document.querySelectorAll('input[name=famAllergy]').forEach(function (i) { i.addEventListener('change', function () { $('allergyBox').hidden = i.value !== 'ある'; }); });
     // 食事会ごとに、人数とそのうち未就学児の人数（2026-10-28 小西さん指摘）
     var sel = function (id, v) { return '<select id="' + id + '" aria-label="' + id + '">' + [0, 1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (String(v || 0) === String(n) ? ' selected' : '') + '>' + n + '名</option>'; }).join('') + '</select>'; };
     $('famMeals').innerHTML = '<span></span><span class="mh">人数</span><span class="mh">うち未就学児</span>' + r.famMeals.map(function (m) {
@@ -234,12 +239,12 @@
     if (v.indexOf('遅い便') === 0) return 'ホテル14:00発。割り勘で1人10,000〜30,000円程度（検討中）';
     return v === '自前' ? 'ご自身で手配' : '';
   }
-  // 行き・帰りの欄：いまの状態と「変更する」。まだ決まっていなければ選択肢をそのまま出す
+  // 行き・帰りの欄：いまの状態と、選択肢（全部見せる。「変更する」で隠すと、帰りの午後の便が無くなったように見えた・2026-10-31 小西さん指摘）
   function moveBox(key, label, opts, now, note) {
     var cur = opts.indexOf(now) >= 0 ? now : '';
     return '<div class="stat"><span class="k">' + label + '</span><span class="v">' + (cur ? esc(cur) + (note(cur) ? '<span class="s">' + esc(note(cur)) + '</span>' : '') : '<span class="todo">まだ伺っていません。下から選んでください</span>') + '</span>' +
-      (cur ? '<button type="button" class="link" data-edit="' + key + '">変更する</button>' : '') + '</div>' +
-      '<div class="opts" id="o-' + key + '" role="radiogroup" aria-label="' + label + '"' + (cur ? ' hidden' : '') + '>' + opts.map(function (v) {
+      '</div>' + (cur ? '<span class="ql">変更する場合は、選び直してください</span>' : '') +
+      '<div class="opts" id="o-' + key + '" role="radiogroup" aria-label="' + label + '">' + opts.map(function (v) {
         return '<label class="opt"><input type="radio" name="' + key + '" value="' + esc(v) + '"' + (v === cur ? ' checked' : '') + '><span class="t">' + esc(v) + (note(v) ? '<span class="s">' + esc(note(v)) + '</span>' : '') + '</span></label>';
       }).join('') + '</div>';
   }
@@ -263,7 +268,10 @@
           r.nijikaiOpts.map(function (v) { return '<label class="opt"><input type="radio" name="nijikai" value="' + esc(v) + '"' + (v === a.nijikai ? ' checked' : '') + '><span class="t">' + esc(v) + '</span></label>'; }).join('') +
           '</div><p class="muted">二次会の費用は、飲まれた分を各自その場でお支払いください。</p></div>';
       } else if (n === 21) {
-        html += moveBox('back', '帰り', r.backOpts, f.back, backNote);
+        // 最終日は自由行動。チェックアウトはホテルの規定で11:00（2026-10-31 小西さん指示）
+        html += '<div class="stat"><span class="k">チェックアウト</span><span class="v">11:00まで<span class="s">貸切バス（10:00発）の方は、出発までにお済ませください</span></span></div>' +
+          '<div class="stat"><span class="k">自由時間</span><span class="v">最終日は自由行動です<span class="s">スキー・スノボを楽しんで、午後にお帰りいただくこともできます</span></span></div>' +
+          moveBox('back', '帰り', r.backOpts, f.back, backNote);
       } else {
         html += dayActs(dk, a);
       }
@@ -272,7 +280,6 @@
       box.appendChild(el);
     });
     box.querySelectorAll('input').forEach(function (i) { i.addEventListener('change', skiRule); });
-    box.querySelectorAll('[data-edit]').forEach(function (b) { b.addEventListener('click', function () { $('o-' + b.dataset.edit).hidden = false; b.hidden = true; }); });
     box.querySelectorAll('[data-hotel]').forEach(function (b) { b.hidden = me.hold; b.addEventListener('click', openHotel); });
   }
 
@@ -363,11 +370,11 @@
     ans.go = radio('go'); ans.back = radio('back');
     var miss = r.me.days.filter(function (d) { return ans[d + '_w'] && !ans[d]; });
     if (miss.length) return err('saveErr', miss.map(function (d) { return r.dayDefs.filter(function (x) { return x.key === d; })[0].label; }).join('、') + 'の、空きが出なかったときの過ごし方を選んでください');
-    ['kind', 'level', 'sex', 'fam', 'famWay', 'avalanche', 'nijikai', 'alcohol'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
+    ['kind', 'level', 'sex', 'fam', 'famAllergy', 'avalanche', 'nijikai', 'alcohol'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
     r.famMeals.forEach(function (m) { ans[m.key] = $(m.key).value; if (m.kid) ans[m.kid] = $(m.kid).value; });
     if ($('avBox').hidden) ans.avalanche = '';
-    ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.tel = $('tel').value.trim();
+    ans.famAllergyBody = $('famAllergyBody').value; ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.tel = $('tel').value.trim();
     var add = $('addBox').hidden ? '' : $('addMail').value.trim();
     busy($('save'), true); err('saveErr', ''); $('save').textContent = '送信しています（数秒かかります）…';
     api('save', { s: st.s, answers: ans, add_email: add, add_role: '本人' }).then(function (res) {
