@@ -7,7 +7,7 @@
 <title>ニセコ会議2027 第2回アンケート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
-<link rel="stylesheet" href="base.css?v=10">
+<link rel="stylesheet" href="base.css?v=11">
 </head>
 <body>
 <div class="wrap">
@@ -102,14 +102,7 @@
       <div class="note alert" id="warnBox" hidden>
         <strong>ご確認ください</strong>
         <ul id="warnList"></ul>
-        <span>行き・帰りは、下で直せます。日程・ホテルの変更は「日程・ホテルを変更したい」から事務局へご連絡ください。</span>
-      </div>
-      <div id="goBackBox">
-        <div class="q"><span class="ql">行き（2/18）<span class="req">*</span></span><div class="opts" id="o-go" role="radiogroup" aria-label="行き"></div></div>
-        <div class="q"><span class="ql">帰り（2/21）<span class="req">*</span></span><div class="opts" id="o-back" role="radiogroup" aria-label="帰り"></div></div>
-        <p class="muted">貸切バスは1便ずつです。行き：2/18（木）新千歳空港 11:15発（ホテル14:00着）。帰り：2/21（日）ホテル10:00発。乗車費は片道6,000円（税別）です。<br>帰りは、ホテル14:00発の遅い便（ジャンボタクシー・割り勘で1人10,000〜30,000円程度）も検討しています。割り勘でよろしければ「遅い便」をお選びください。</p>
-        <p class="err" id="firstErr" hidden></p>
-        <div class="row"><button class="btn" type="button" id="firstSave">この内容で次へ</button></div>
+        <span>行き・帰りは、Bの2/18（木）・2/21（日）の欄で直せます。日程・ホテルの変更は「日程・ホテルを変更したい」から事務局へご連絡ください。</span>
       </div>
       <div class="note alert" id="holdBox" hidden>
         <strong>日程・ホテルの変更を、事務局で確認しています</strong><br>
@@ -131,15 +124,18 @@
   <div id="rest" hidden>
   <section class="sec">
     <h2>B. 日ごとの過ごし方</h2>
-    <div class="q" id="njBox" hidden><span class="ql">2/18（木）前夜祭のあとの二次会に参加されますか<span class="req">*</span></span><div class="opts" id="o-nj" role="radiogroup" aria-label="前夜祭のあとの二次会"></div><p class="muted">二次会の費用は、飲まれた分を各自その場でお支払いください。</p></div>
-    <p>日ごとに1つ選んでください。人数の決まっているものは先着順です。アクティビティの送迎は参加費に含みます。途中から別のアクティビティやランチに合流される場合の移動費（タクシー代など）は、ご自身のご負担です。満員のものは「キャンセル待ち」で申し込めます。キャンセルが出たときや、ご希望が多く枠を増やすことになったときに、申し込み順にご案内します。</p>
     <div id="days"></div>
-    <p class="muted" id="noDays" hidden>第1回のご回答の日程では、アクティビティのある日（2/19・2/20）のご滞在がありません。変更がある場合はEにお書きください。</p>
-    <div class="note">
-      <strong>キャンセルされた場合</strong><br>
-      その日は「自分たちで滑る」か「自分で過ごす」に変わります。1/31（日）までにご連絡いただければ、空きのある別のアクティビティへの変更をご相談できます。キャンセル料は各選択肢に書いたとおりです（「確認中」のものは、決まりしだいお知らせします）。<br><br><strong>最少人数に届かなかった場合</strong><br>そのアクティビティは中止とし、締切後にご連絡します。空きのある別のアクティビティへの変更をご相談できます。
-    </div>
   </section>
+  <!-- 2/19・2/20 の日付のすぐ下に出す注意（2026-10-31 小西さん指示） -->
+  <template id="dayNote">
+    <div class="note">
+      日ごとに1つ選んでください。人数の決まっているものは先着順です。アクティビティの送迎は参加費に含みます。途中から別のアクティビティやランチに合流される場合の移動費（タクシー代など）は、ご自身のご負担です。満員のものは「キャンセル待ち」で申し込めます。キャンセルが出たときや、ご希望が多く枠を増やすことになったときに、申し込み順にご案内します。<br><br>
+      <strong>キャンセルされた場合</strong><br>
+      その日は「自分たちで滑る」か「自分で過ごす」に変わります。1/31（日）までにご連絡いただければ、空きのある別のアクティビティへの変更をご相談できます。キャンセル料は各選択肢に書いたとおりです（「確認中」のものは、決まりしだいお知らせします）。<br><br>
+      <strong>最少人数に届かなかった場合</strong><br>
+      そのアクティビティは中止とし、締切後にご連絡します。空きのある別のアクティビティへの変更をご相談できます。
+    </div>
+  </template>
   <section class="sec" id="secC">
     <h2>C. スキー・スノボ <span class="tag">滑る日がある方</span></h2>
     <div class="q"><span class="ql">種目<span class="req">*</span></span><div class="opts" id="o-kind" role="radiogroup" aria-label="種目"></div></div>
@@ -147,7 +143,7 @@
     <div class="q"><span class="ql">性別<span class="req">*</span></span><div class="opts" id="o-sex" role="radiogroup" aria-label="性別"></div></div>
     <p class="muted">初心者：ほとんど滑れない方、初めての方</p>
     <div class="q" id="avBox" hidden><span class="ql">バックカントリーのアバランチセット（ビーコン・プローブ・ショベル）<span class="req">*</span></span><div class="opts" id="o-av" role="radiogroup" aria-label="アバランチセット"></div></div>
-    <p class="note">板・ブーツ・ヘルメットのレンタルは、各自でご手配ください。ヘルメットは全員着用です。</p>
+    <p class="note">板・ブーツ・ヘルメットのレンタルは、各自でご手配ください。ヘルメットは全員着用です。レンタルの方法やリフト券の買い方は、会期の直前にご案内します。</p>
   </section>
   <section class="sec">
     <h2>D. 同伴者（ご家族など）</h2>
@@ -166,8 +162,10 @@
       <p class="muted">懇親会だけ参加される方の食事会の料金は、1回 12,000〜15,000円（税込）の予定です（参加される日によって異なるため、決まりしだいご案内します）。未就学児は 4,000円（税込）です。</p>
       <label for="famWish">日ごとにやりたいこと</label>
       <textarea id="famWish" placeholder="例：妻 2/19はスキー（班）、2/20はニッカ希望。両日とも懇親会に参加"></textarea>
-      <div class="note">アクティビティの料金は参加者と同じです。スキー・スノボ（班で滑る）は、1日10,000円かかります。</div>
-      <div class="note warn">定員のあるアクティビティは、他の参加者の方が優先です。ご希望に沿えるかは、会期の10営業日前ごろにお知らせします。</div>
+      <div class="note warn">
+        ・アクティビティの料金は参加者と同じです。スキー・スノボ（班で滑る）は、1日10,000円かかります。<br>
+        ・スキー・スノーボードへのご同行に制限はありません。そのほかのアクティビティは、他の参加者の方のご希望を優先したうえでのご案内となります。ご希望に沿えるかは、会期の10営業日前ごろにお知らせします。
+      </div>
     </div>
   </section>
   <section class="sec">
@@ -193,8 +191,7 @@
     </div>
     <div class="note warn">
       <strong>ご注意ください</strong><br>
-      ・お選びいただいたアクティビティなどは、最終決定ではありません。各アクティビティの人数の制約やその他の条件により、変更をお願いする場合があります。その際は、事務局から代わりのご希望を伺い、できる限りご希望に沿うよう調整いたします。最終的な決定は事務局にて行います。<br>
-      ・同伴の方は、他の参加者の方のご希望を優先したうえでのご案内となります。スキー・スノーボードへのご同行に制限はありませんが、そのほかのアクティビティは、他の参加者の方のご希望を優先いたします。
+      ・お選びいただいたアクティビティなどは、最終決定ではありません。各アクティビティの人数の制約やその他の条件により、変更をお願いする場合があります。その際は、事務局から代わりのご希望を伺い、できる限りご希望に沿うよう調整いたします。最終的な決定は事務局にて行います。
     </div>
     <p class="err" id="saveErr" hidden></p>
     <button class="btn" type="submit" id="save">送信</button>
@@ -219,6 +216,6 @@
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="app.js?v=16"></script>
+<script src="app.js?v=17"></script>
 </body>
 </html>
