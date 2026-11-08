@@ -7,7 +7,7 @@
 <title>ニセコ会議2027 第2回アンケート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
-<link rel="stylesheet" href="base.css?v=17">
+<link rel="stylesheet" href="base.css?v=18">
 <script>try{document.documentElement.dataset.theme=localStorage.getItem('niseko2027-theme')||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 </head>
 <body>
@@ -132,7 +132,7 @@
   <template id="dayNote">
     <div class="note caution">
       <strong>アクティビティの選択</strong><br>
-      人数の決まっているものは先着順で、満員のものはキャンセル待ちで申し込めます。送迎は参加費に含みます（途中から合流する場合のタクシー代などはご自身のご負担です）。食べ物のアレルギーはEにお書きください。<br><br>
+      人数の決まっているものは先着順で、満員のものはキャンセル待ちで申し込めます。送迎は参加費に含みます（途中から合流する場合のタクシー代などはご自身のご負担です）。食べ物のアレルギーは「E. その他」のアンケートでお答えください。<br><br>
       <strong>キャンセルされた場合</strong><br>
       その日は「自分たちで滑る・自分で過ごす・仕事など」に変わります。1/31（日）までにご連絡いただければ、空きのある別のアクティビティへの変更をご相談できます。キャンセル料は各選択肢に書いたとおりです（「確認中」のものは、決まりしだいお知らせします）。<br><br>
       <strong>最少人数に届かなかった場合</strong><br>
@@ -170,7 +170,7 @@
       </div>
       <label for="famWish">日ごとにやりたいこと</label>
       <textarea id="famWish" placeholder="例：妻 2/19はスキー（班）、2/20はニッカ希望。両日とも懇親会に参加"></textarea>
-      <div class="note warn">
+      <div class="note caution">
         ・アクティビティの料金は参加者と同じです。スキー・スノボ（班で滑る）は、1日10,000円かかります。<br>
         ・スキー・スノーボードへのご同行に制限はありません。そのほかのアクティビティは、他の参加者の方のご希望を優先したうえでのご案内となります。ご希望に沿えるかは、会期の10営業日前ごろにお知らせします。
       </div>
@@ -180,25 +180,7 @@
   <section class="sec">
     <h2>E. その他</h2>
     <div class="block">
-    <div class="q"><span class="ql">懇親会でお酒を飲まれますか<span class="req">*</span></span><div class="opts" id="o-alc" role="radiogroup" aria-label="懇親会でのお酒"></div></div>
-    <div class="q">
-      <span class="ql">参加費の請求書について</span>
-      <label for="billTo">請求書の送付先（メールアドレス）<span class="req">*</span></label>
-      <input type="email" id="billTo" autocomplete="email" placeholder="例：keiri@example.co.jp">
-      <label for="billName">請求書の宛名<span class="req">*</span></label>
-      <input type="text" id="billName" autocomplete="organization" placeholder="例：株式会社◯◯ 経理部 ◯◯様">
-      <label for="payer">お振込みの名義（参加される会社名・お名前と異なる場合のみ）</label>
-      <input type="text" id="payer" placeholder="例：カ）マルマルホールディングス">
-    </div>
-    <div class="q">
-      <span class="ql">当日の撮影・広報での利用について<span class="req">*</span></span>
-      <p class="muted">当日の写真・映像を、記録やニセコ会議の広報に使う場合があります。ご了承のうえご参加ください。</p>
-      <label class="opt"><input type="checkbox" id="photo"><span class="t">了承しました</span></label>
-    </div>
-    <div class="q">
-      <label for="memo">食べ物のアレルギー・食事の制限、ご要望など</label>
-      <textarea id="memo"></textarea>
-    </div>
+    <h3 class="sub">ご連絡先</h3>
     <div class="q">
       <label for="tel">ご本人の携帯電話番号（当日のご連絡用）<span class="req">*</span></label>
       <input type="tel" id="tel" autocomplete="tel" inputmode="tel" placeholder="例：090-1234-5678">
@@ -213,7 +195,34 @@
       <input type="email" id="addMail" autocomplete="email" placeholder="例：name@example.co.jp">
       <p class="muted" id="addNote">秘書・ご担当者の方がご回答の場合も、ご本人のアドレスを伺っています。ご回答内容の確認メールは、ご本人にもお送りします。</p>
     </div>
-    <div class="note warn">
+    <h3 class="sub">お食事</h3>
+    <div class="q"><span class="ql">懇親会でお酒を飲まれますか<span class="req">*</span></span><div class="opts" id="o-alc" role="radiogroup" aria-label="懇親会でのお酒"></div></div>
+    <div class="q">
+      <label for="allergy">食べ物のアレルギー・食事の制限</label>
+      <textarea id="allergy" placeholder="例：えび・かにのアレルギー／ベジタリアン"></textarea>
+      <p class="muted">ない場合は空欄のままで結構です。お店にお伝えします。</p>
+    </div>
+    <h3 class="sub">参加費の請求書</h3>
+    <div class="q">
+      <label for="billTo">請求書の送付先（メールアドレス）<span class="req">*</span></label>
+      <input type="email" id="billTo" autocomplete="email" placeholder="例：keiri@example.co.jp">
+      <label for="billName">請求書の宛名<span class="req">*</span></label>
+      <input type="text" id="billName" autocomplete="organization" placeholder="例：株式会社◯◯ 経理部 ◯◯様">
+      <label for="payer">お振込みの名義（参加される会社名・お名前と異なる場合のみ）</label>
+      <input type="text" id="payer" placeholder="例：カ）マルマルホールディングス">
+    </div>
+    <h3 class="sub">撮影・広報</h3>
+    <div class="q">
+      <span class="ql">当日の撮影・広報での利用について<span class="req">*</span></span>
+      <p class="muted">当日の写真・映像を、記録やニセコ会議の広報に使う場合があります。ご了承のうえご参加ください。</p>
+      <label class="opt"><input type="checkbox" id="photo"><span class="t">了承しました</span></label>
+    </div>
+    <h3 class="sub">ご要望</h3>
+    <div class="q">
+      <label for="memo">そのほか、事務局へのご要望があればお書きください</label>
+      <textarea id="memo"></textarea>
+    </div>
+    <div class="note caution">
       <strong>ご注意ください</strong><br>
       ・お選びいただいたアクティビティなどは、最終決定ではありません。各アクティビティの人数の制約やその他の条件により、変更をお願いする場合があります。その際は、事務局から代わりのご希望を伺い、できる限りご希望に沿うよう調整いたします。最終的な決定は事務局にて行います。
     </div>
@@ -241,6 +250,6 @@
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="app.js?v=26"></script>
+<script src="app.js?v=27"></script>
 </body>
 </html>

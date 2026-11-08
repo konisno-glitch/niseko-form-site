@@ -207,7 +207,7 @@
     }).join('');
     radios('o-sex', 'sex', ['男性', '女性'], a.sex);
     document.querySelectorAll('input[name=fam]').forEach(function (i) { i.checked = i.value === a.fam; });
-    $('photo').checked = !!a.photo; $('billTo').value = a.billTo || ''; $('billName').value = a.billName || ''; $('payer').value = a.payer || ''; $('famN').value = a.famN || '1名'; $('famWish').value = a.famWish || ''; $('memo').value = a.memo || ''; $('tel').value = a.tel || '';
+    $('photo').checked = !!a.photo; $('billTo').value = a.billTo || ''; $('billName').value = a.billName || ''; $('payer').value = a.payer || ''; $('famN').value = a.famN || '1名'; $('famWish').value = a.famWish || ''; $('memo').value = a.memo || ''; $('allergy').value = a.allergy || ''; $('tel').value = a.tel || '';
     $('famBox').hidden = a.fam !== 'yes';
     $('mailList').innerHTML = r.addresses.map(function (x) { return '<li><span class="addr">' + esc(x.masked) + '</span>' + (x.role ? '（' + esc(x.role === '本人' ? 'ご本人' : '秘書・ご担当者') + '）' : '') + '</li>'; }).join('');
     var hasSelf = r.addresses.some(function (x) { return x.role === '本人'; });
@@ -390,7 +390,7 @@
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
     r.famMeals.forEach(function (m) { ans[m.key] = $(m.key).value; if (m.kid) ans[m.kid] = $(m.kid).value; });
     if ($('avBox').hidden) ans.avalanche = '';
-    ans.photo = $('photo').checked; ans.billTo = $('billTo').value.trim(); ans.billName = $('billName').value.trim(); ans.payer = $('payer').value.trim(); ans.famAllergyBody = $('famAllergyBody').value; ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.tel = $('tel').value.trim();
+    ans.photo = $('photo').checked; ans.billTo = $('billTo').value.trim(); ans.billName = $('billName').value.trim(); ans.payer = $('payer').value.trim(); ans.famAllergyBody = $('famAllergyBody').value; ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.allergy = $('allergy').value; ans.tel = $('tel').value.trim();
     var add = $('addBox').hidden ? '' : $('addMail').value.trim();
     busy($('save'), true); err('saveErr', ''); $('save').textContent = '送信しています（数秒かかります）…';
     api('save', { s: st.s, answers: ans, add_email: add, add_role: '本人' }).then(function (res) {
