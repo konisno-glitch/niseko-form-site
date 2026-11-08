@@ -307,7 +307,7 @@
       var full = isFull(dk, x, held), on = sel === x.id, lim = limited(x);
       var left = lim ? leftOf(dk, x) : null;
       // 右側の表示：申し込み済み／残り◯名／上限なし（定員のないものも空けずに書く・2026-11-08 小西さん指摘）
-      var stat = held === x.id ? 'お申し込み済み' : !lim ? '上限なし' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名';
+      var stat = held === x.id && !savedW ? 'お申し込み済み' : !lim ? '上限なし' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名';
       // 最初は申し込み済みのものも含めて全部閉じておく（一覧で見渡せるように・2026-11-08 小西さん指摘）
       html += '<label class="opt act' + (full ? ' wait' : '') + '"><input type="radio" name="' + dk + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
         '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + '<span class="left" data-base="' + esc(stat) + '">' + esc(stat) + '</span>' + '</span>' +
