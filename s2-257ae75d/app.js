@@ -287,7 +287,7 @@
           var on = l.querySelector('input').checked, st = l.querySelector('.left'), base = st.dataset.base;
           l.classList.toggle('open', on);
           // いま選んだもの（まだ送信していない）には「選択中」と出す
-          st.textContent = on && base !== 'お申し込み済み' && base.indexOf('申し込み済み') < 0 ? '選択中' + (base.indexOf('残り') === 0 ? '・' + base : '') : base;
+          st.textContent = on && base !== 'お申し込み済み' && base.indexOf('申し込み済み') < 0 ? (base.indexOf('満員') === 0 ? 'キャンセル待ちで選択中' : '選択中' + (base.indexOf('残り') === 0 ? '・' + base : '')) : base;
           st.classList.toggle('sel', on);
         });
       });
