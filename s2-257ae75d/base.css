@@ -99,3 +99,4 @@ input.code{font-size:1.4rem;letter-spacing:.3em;font-variant-numeric:tabular-num
 .day>.ql{font-weight:700;font-size:.9rem}
 #allergyBox{display:flex;flex-direction:column;gap:6px}
 #allergyBox label{font-weight:700}
+.opt dd a{color:var(--accent)}
