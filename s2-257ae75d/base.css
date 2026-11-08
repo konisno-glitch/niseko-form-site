@@ -1,0 +1,117 @@
+[hidden]{display:none!important}
+/* Layout: 1カラムのスマホ向けフォーム（メッセンジャーのリンクから開く想定） */
+:root{
+  --bg:#EEF2F4; --card:#FFFFFF; --ink:#18232E; --muted:#5A6672; --line:#D5DDE3;
+  --accent:#2C5E86; --accent-soft:#E2ECF4; --mock:#7A4E14; --mock-soft:#FBF1DF; --full:#9AA3AB; --warn:#A8432A; --caution-soft:#FBE9E6;
+  --display:"Zen Kaku Gothic New","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+  --body:"BIZ UDPGothic","Hiragino Kaku Gothic ProN","Yu Gothic",Meiryo,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10171D; --card:#18222B; --ink:#F2F5F8; --muted:#BAC6D0; --line:#2C3A46;
+  --accent:#7FB0D8; --accent-soft:#1E3346; --mock:#E2B46C; --mock-soft:#2E2618; --full:#7D8892; --warn:#E58B72; --caution-soft:#3A2420; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10171D; --card:#18222B; --ink:#F2F5F8; --muted:#BAC6D0; --line:#2C3A46;
+  --accent:#7FB0D8; --accent-soft:#1E3346; --mock:#E2B46C; --mock-soft:#2E2618; --full:#5D6872; --warn:#E58B72; --caution-soft:#3A2420; color-scheme:dark}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.75;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 48px}
+.wrap{max-width:620px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0}
+h1{font-size:1.45rem;line-height:1.35}
+h2{font-size:1.5rem;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap;padding-bottom:8px;border-bottom:3px solid var(--accent)}
+h2 .tag{font-family:var(--body);font-size:.78rem;color:var(--accent);border:1px solid var(--accent);border-radius:4px;padding:0 6px}
+p{margin:0}
+.muted{color:var(--muted);font-size:.92rem}
+.badge{align-self:flex-start;font-size:.78rem;color:var(--mock);background:var(--mock-soft);border:1px dashed var(--mock);border-radius:4px;padding:2px 8px}
+.head{background:var(--card);border-top:6px solid var(--accent);border-radius:8px;padding:18px 18px 16px;display:flex;flex-direction:column;gap:10px}
+.facts{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:.88rem}
+.facts b{color:var(--accent)}
+.sec{background:var(--card);border-radius:8px;padding:18px;display:flex;flex-direction:column;gap:14px;border:1px solid var(--line)}
+.q{display:flex;flex-direction:column;gap:8px}
+.q>label,.q>.ql{font-weight:700}
+.req{color:var(--warn);margin-left:4px}
+select,input[type=text],textarea{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box}
+textarea{min-height:84px;resize:vertical}
+.opts{display:flex;flex-direction:column;gap:6px}
+.opt{display:flex;gap:10px;align-items:flex-start;border:1px solid var(--line);border-radius:6px;padding:9px 11px;cursor:pointer}
+.opt input{margin-top:5px;accent-color:var(--accent);flex:none}
+.opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.opt .t{display:flex;flex-direction:column;min-width:0;flex:1}
+.opt .name{display:flex;justify-content:space-between;gap:2px 10px;align-items:baseline;flex-wrap:wrap}
+.opt .name>span:first-child{flex:1 1 9em;min-width:0}
+.opt .s{font-size:.88rem;color:var(--muted)}
+.opt dl{display:grid;grid-template-columns:max-content 1fr;gap:2px 10px;margin:6px 0 0;font-size:.88rem;color:var(--muted);font-variant-numeric:tabular-nums}
+.opt dt{white-space:nowrap} .opt dd{margin:0}
+.opt.full{color:var(--full);cursor:not-allowed;border-style:dashed}
+.opt.wait{border-style:dashed}
+.wait .left{color:var(--warn)}
+.fb{border:1px dashed var(--warn);border-radius:6px;padding:8px 10px;display:flex;flex-direction:column;gap:8px}
+.fb .ql{color:var(--warn)}
+.meals{display:grid;grid-template-columns:1fr auto auto;gap:6px 12px;align-items:center}
+.meals .mh{font-size:12px;color:#5b6475}
+.q.lunch{border-top:1px dashed #c9d1dd;padding-top:10px;margin-top:10px}
+.meals select{width:auto}
+.opt.full .s,.opt.full dl{color:var(--full)}
+.left{font-variant-numeric:tabular-nums;font-size:.78rem;color:var(--accent);white-space:nowrap}
+.full .left{color:var(--full)}
+.block>h3.sub{font-size:1.05rem;color:var(--accent);margin:18px 0 0;padding-bottom:3px;border-bottom:1px solid var(--line)}
+.block>h3.sub:first-child{margin-top:4px}
+.grp{font-size:.8rem;color:var(--muted);letter-spacing:.06em;margin-top:6px}
+.day{border-left:3px solid var(--accent);padding-left:12px;display:flex;flex-direction:column;gap:8px}
+.day h3{font-size:1.45rem;line-height:1.3;color:var(--accent);padding:2px 0 4px;border-bottom:1px solid var(--line)}
+#days{display:flex;flex-direction:column;gap:26px}
+/* 日ごとの状態（行き・前夜祭・帰り）と、いない日の「該当なし」 */
+.stat{display:grid;grid-template-columns:6.5em 1fr;gap:2px 10px;align-items:baseline}
+.stat .link{grid-column:2}
+.stat .k{color:var(--muted);font-size:.88rem}
+.stat .v{font-weight:700;display:flex;flex-direction:column}
+.stat .s,.none .s{font-weight:400;font-size:.82rem;color:var(--muted)}
+.stat .todo{color:var(--warn);font-weight:400;font-size:.9rem}
+.none{font-weight:700;color:var(--muted);display:flex;flex-direction:column}
+/* A〜E の切れ目を見やすく（2026-10-31 小西さん指摘）：A と B の間は広め、B〜E の間にも間隔 */
+#stForm{gap:32px}
+#rest{display:flex;flex-direction:column;gap:22px}
+.note{font-size:.9rem;background:var(--accent-soft);border-radius:6px;padding:8px 10px}
+.note.caution{background:var(--caution-soft)}
+.note.warn{background:transparent;border:1px solid var(--warn)}
+.note.alert{background:transparent;border:1px solid var(--warn);color:var(--warn);font-size:.9rem;margin:10px 0}
+.note.alert ul{margin:6px 0;padding-left:1.2em}
+.note.alert li{margin:3px 0}
+.sugg{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.sugg button{font:inherit;text-align:left;background:var(--card);color:var(--ink);border:0;border-bottom:1px solid var(--line);padding:9px 11px;cursor:pointer}
+.sugg button:last-child{border-bottom:0}
+.sugg button:hover{background:var(--accent-soft)}
+.card1{border:1px solid var(--accent);border-radius:6px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.card1 dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0;font-size:.9rem}
+.card1 dt{color:var(--muted)} .card1 dd{margin:0}
+.btn{font:inherit;font-weight:700;background:var(--accent);color:var(--card);border:0;border-radius:6px;padding:11px 22px;cursor:pointer;align-self:flex-start}
+.link{font:inherit;font-size:.85rem;background:none;border:0;color:var(--accent);text-decoration:underline;padding:0;cursor:pointer;align-self:flex-start}
+.btn:focus-visible,.link:focus-visible,.sugg button:focus-visible,.opt:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.done ul{margin:0;padding-left:1.2em}
+.stage{display:flex;flex-direction:column;gap:16px}
+.err{color:var(--warn);font-size:.9rem;white-space:pre-line}
+.ok{color:var(--accent);font-size:.9rem}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.btn[disabled]{opacity:.5;cursor:wait}
+.btn.sub{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+input[type=email],input[type=tel],input[inputmode=numeric]{font:inherit;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:6px;padding:8px 10px;width:100%;box-sizing:border-box}
+input.code{font-size:1.4rem;letter-spacing:.3em;font-variant-numeric:tabular-nums;max-width:12em}
+.help{font-size:.85rem;border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:flex;flex-direction:column;gap:6px}
+.addr{font-variant-numeric:tabular-nums}
+.cal{display:flex;flex-direction:column;gap:6px}
+.cal a{color:var(--accent)}
+.day>.ql{font-weight:700;font-size:.9rem}
+#allergyBox{display:flex;flex-direction:column;gap:6px}
+#allergyBox label{font-weight:700}
+.opt dd a{color:var(--accent)}
+/* 2/19・2/20 の選択肢：選んだものだけ詳しい内容を開く（2026-11-08 小西さん指示） */
+.opt.act dl{display:none}
+.opt.act.open dl{display:grid}
+.opt.act .name>span:first-child{font-weight:700}
+.opt.act:not(.open) .name>span:first-child::after{content:"　詳しく ▾";font-weight:400;font-size:.8rem;color:var(--accent);white-space:nowrap}
+.opt.act{padding:12px 12px}
+.opts.acts{gap:8px}
+.hint{margin:0}
+/* C〜E にも B と同じ左の縦線 */
+.block{border-left:3px solid var(--accent);padding-left:12px;display:flex;flex-direction:column;gap:14px}
+.opt.act .left.sel{font-weight:700}
+.opt.act .left{white-space:nowrap}
