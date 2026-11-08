@@ -298,7 +298,8 @@
       if (x.g !== last) { html += '<div class="grp">' + esc(x.g) + '</div>'; last = x.g; }
       var full = isFull(dk, x, held), on = sel === x.id, lim = limited(x);
       var left = lim ? leftOf(dk, x) : null;
-      html += '<label class="opt act' + (full ? ' wait' : '') + (on ? ' open' : '') + '"><input type="radio" name="' + dk + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
+      // 最初は申し込み済みのものも含めて全部閉じておく（一覧で見渡せるように・2026-11-08 小西さん指摘）
+      html += '<label class="opt act' + (full ? ' wait' : '') + '"><input type="radio" name="' + dk + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
         '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (lim ? '<span class="left">' + (held === x.id ? 'お申し込み済み' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名') + '</span>' : '') + '</span>' +
         ((x.info.length || lim) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + (x.min ? x.min + '〜' : '') + x.cap + '名</dd>' : '') + (x.pool && r.pools[x.pool].cap ? '<dt>お店の席</dt><dd>' + esc(r.pools[x.pool].t) + ' ' + r.pools[x.pool].cap + '名（同じお店の組の合計）</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + (kv[2] ? '<a href="' + esc(kv[2]) + '" target="_blank" rel="noopener">' + esc(kv[1]) + '</a>' : esc(kv[1])) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
     });
