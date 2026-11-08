@@ -282,7 +282,15 @@
     box.querySelectorAll('input').forEach(function (i) { i.addEventListener('change', skiRule); });
     // 別の選択肢を選ぶと、開いていたものは閉じる
     box.querySelectorAll('.opts.acts').forEach(function (g) {
-      g.addEventListener('change', function () { g.querySelectorAll('.opt.act').forEach(function (l) { l.classList.toggle('open', l.querySelector('input').checked); }); });
+      g.addEventListener('change', function () {
+        g.querySelectorAll('.opt.act').forEach(function (l) {
+          var on = l.querySelector('input').checked, st = l.querySelector('.left'), base = st.dataset.base;
+          l.classList.toggle('open', on);
+          // いま選んだもの（まだ送信していない）には「選択中」と出す
+          st.textContent = on && base !== 'お申し込み済み' && base.indexOf('申し込み済み') < 0 ? '選択中' + (base.indexOf('残り') === 0 ? '・' + base : '') : base;
+          st.classList.toggle('sel', on);
+        });
+      });
     });
     box.querySelectorAll('[data-hotel]').forEach(function (b) { b.hidden = me.hold; b.addEventListener('click', openHotel); });
   }
@@ -298,9 +306,11 @@
       if (x.g !== last) { html += '<div class="grp">' + esc(x.g) + '</div>'; last = x.g; }
       var full = isFull(dk, x, held), on = sel === x.id, lim = limited(x);
       var left = lim ? leftOf(dk, x) : null;
+      // 右側の表示：申し込み済み／残り◯名／上限なし（定員のないものも空けずに書く・2026-11-08 小西さん指摘）
+      var stat = held === x.id ? 'お申し込み済み' : !lim ? '上限なし' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名';
       // 最初は申し込み済みのものも含めて全部閉じておく（一覧で見渡せるように・2026-11-08 小西さん指摘）
       html += '<label class="opt act' + (full ? ' wait' : '') + '"><input type="radio" name="' + dk + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
-        '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (lim ? '<span class="left">' + (held === x.id ? 'お申し込み済み' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名') + '</span>' : '') + '</span>' +
+        '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + '<span class="left" data-base="' + esc(stat) + '">' + esc(stat) + '</span>' + '</span>' +
         ((x.info.length || lim) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + (x.min ? x.min + '〜' : '') + x.cap + '名</dd>' : '') + (x.pool && r.pools[x.pool].cap ? '<dt>お店の席</dt><dd>' + esc(r.pools[x.pool].t) + ' ' + r.pools[x.pool].cap + '名（同じお店の組の合計）</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + (kv[2] ? '<a href="' + esc(kv[2]) + '" target="_blank" rel="noopener">' + esc(kv[1]) + '</a>' : esc(kv[1])) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
     });
     html += '</div>';

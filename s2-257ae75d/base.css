@@ -110,3 +110,5 @@ input.code{font-size:1.4rem;letter-spacing:.3em;font-variant-numeric:tabular-num
 .hint{margin:0}
 /* C〜E にも B と同じ左の縦線 */
 .block{border-left:3px solid var(--accent);padding-left:12px;display:flex;flex-direction:column;gap:14px}
+.opt.act .left.sel{font-weight:700}
+.opt.act .left{white-space:nowrap}
