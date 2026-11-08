@@ -7,7 +7,8 @@
 <title>ニセコ会議2027 第2回アンケート</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
-<link rel="stylesheet" href="base.css?v=14">
+<link rel="stylesheet" href="base.css?v=15">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem('niseko2027-theme')||'light'}catch(e){document.documentElement.dataset.theme='light'}</script>
 </head>
 <body>
 <div class="wrap">
@@ -19,6 +20,7 @@
     <span>締切 <b id="deadline">11/23（月・祝）</b></span>
     <span>アクティビティ・バックカントリーは<b>先着順</b></span>
   </div>
+  <button type="button" class="link" id="themeBtn">暗い背景で表示する</button>
 </header>
 
 <!-- 1. 名前 -->
@@ -139,14 +141,17 @@
   </template>
   <section class="sec" id="secC">
     <h2>C. スキー・スノボ <span class="tag">滑る日がある方</span></h2>
+    <div class="block">
     <div class="q"><span class="ql">種目<span class="req">*</span></span><div class="opts" id="o-kind" role="radiogroup" aria-label="種目"></div></div>
     <div class="q"><span class="ql">レベル<span class="req">*</span></span><div class="opts" id="o-level" role="radiogroup" aria-label="レベル"></div></div>
     <div class="q"><span class="ql">性別<span class="req">*</span></span><div class="opts" id="o-sex" role="radiogroup" aria-label="性別"></div></div>
     <div class="q" id="avBox" hidden><span class="ql">バックカントリーのアバランチセット（ビーコン・プローブ・ショベル）<span class="req">*</span></span><div class="opts" id="o-av" role="radiogroup" aria-label="アバランチセット"></div></div>
     <p class="note">板・ブーツ・ヘルメットのレンタルは、各自でご手配ください。ヘルメットは全員着用です。レンタルの方法やリフト券の買い方は、会期の直前にご案内します。</p>
+    </div>
   </section>
   <section class="sec">
     <h2>D. 同伴者（会議に参加されないご家族など）</h2>
+    <div class="block">
     <p class="muted">会議に参加される同僚の方などは、ご本人が参加者として登録されています。その方のことはここには含めず、ご本人に回答をお願いします。</p>
     <div class="q"><span class="ql">同伴者はいますか<span class="req">*</span></span>
       <div class="opts" role="radiogroup" aria-label="同伴者">
@@ -170,9 +175,11 @@
         ・スキー・スノーボードへのご同行に制限はありません。そのほかのアクティビティは、他の参加者の方のご希望を優先したうえでのご案内となります。ご希望に沿えるかは、会期の10営業日前ごろにお知らせします。
       </div>
     </div>
+    </div>
   </section>
   <section class="sec">
     <h2>E. その他</h2>
+    <div class="block">
     <div class="q"><span class="ql">懇親会でお酒を飲まれますか<span class="req">*</span></span><div class="opts" id="o-alc" role="radiogroup" aria-label="懇親会でのお酒"></div></div>
     <div class="q">
       <span class="ql">参加費の請求書について</span>
@@ -210,6 +217,7 @@
       <strong>ご注意ください</strong><br>
       ・お選びいただいたアクティビティなどは、最終決定ではありません。各アクティビティの人数の制約やその他の条件により、変更をお願いする場合があります。その際は、事務局から代わりのご希望を伺い、できる限りご希望に沿うよう調整いたします。最終的な決定は事務局にて行います。
     </div>
+    </div>
     <p class="err" id="saveErr" hidden></p>
     <button class="btn" type="submit" id="save">送信</button>
   </section>
@@ -233,6 +241,6 @@
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="app.js?v=20"></script>
+<script src="app.js?v=21"></script>
 </body>
 </html>

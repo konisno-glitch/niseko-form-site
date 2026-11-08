@@ -280,6 +280,10 @@
       box.appendChild(el);
     });
     box.querySelectorAll('input').forEach(function (i) { i.addEventListener('change', skiRule); });
+    // 別の選択肢を選ぶと、開いていたものは閉じる
+    box.querySelectorAll('.opts.acts').forEach(function (g) {
+      g.addEventListener('change', function () { g.querySelectorAll('.opt.act').forEach(function (l) { l.classList.toggle('open', l.querySelector('input').checked); }); });
+    });
     box.querySelectorAll('[data-hotel]').forEach(function (b) { b.hidden = me.hold; b.addEventListener('click', openHotel); });
   }
 
@@ -288,12 +292,13 @@
     var r = st.me, d = r.dayDefs.filter(function (x) { return x.key === dk; })[0];
     // held＝保存済みで席を持っているもの、sel＝いま選んでいるもの（キャンセル待ちならそのアクティビティ）
     var held = (r.answer || {})[dk] || '', savedW = (r.answer || {})[dk + '_w'] || '', sel = a[dk + '_w'] || a[dk] || '';
-    var html = '<div class="opts" role="radiogroup" aria-label="' + esc(d.label) + 'の過ごし方">', last = '';
+    // 選択肢は名前だけ出し、選んだものだけ詳しい内容を開く（2026-11-08 小西さん指示：スマホでどこからどこまでが1つの選択肢か分かりにくい）
+    var html = '<p class="muted hint">選ぶと、料金・時間などの詳しい内容が開きます。</p><div class="opts acts" role="radiogroup" aria-label="' + esc(d.label) + 'の過ごし方">', last = '';
     acts(dk).forEach(function (x) {
       if (x.g !== last) { html += '<div class="grp">' + esc(x.g) + '</div>'; last = x.g; }
       var full = isFull(dk, x, held), on = sel === x.id, lim = limited(x);
       var left = lim ? leftOf(dk, x) : null;
-      html += '<label class="opt' + (full ? ' wait' : '') + '"><input type="radio" name="' + dk + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
+      html += '<label class="opt act' + (full ? ' wait' : '') + (on ? ' open' : '') + '"><input type="radio" name="' + dk + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
         '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + (lim ? '<span class="left">' + (held === x.id ? 'お申し込み済み' : full ? (savedW === x.id ? 'キャンセル待ちで申し込み済み' : '満員・キャンセル待ちできます') : '残り' + left + '名') + '</span>' : '') + '</span>' +
         ((x.info.length || lim) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + (x.min ? x.min + '〜' : '') + x.cap + '名</dd>' : '') + (x.pool && r.pools[x.pool].cap ? '<dt>お店の席</dt><dd>' + esc(r.pools[x.pool].t) + ' ' + r.pools[x.pool].cap + '名（同じお店の組の合計）</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + (kv[2] ? '<a href="' + esc(kv[2]) + '" target="_blank" rel="noopener">' + esc(kv[1]) + '</a>' : esc(kv[1])) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
     });
@@ -431,6 +436,16 @@
   }
   $('edit').addEventListener('click', function () { renderForm(); show('stForm'); });
   $('logout').addEventListener('click', function () { store(''); st.s = ''; st.me = null; $('surname').value = ''; $('cands').hidden = true; show('stName'); });
+
+  // ---------------------------------------------------------------- 表示の明るさ（標準は明るい背景・2026-11-08 小西さん指示）
+  function themeLabel() { $('themeBtn').textContent = document.documentElement.dataset.theme === 'dark' ? '明るい背景で表示する' : '暗い背景で表示する'; }
+  $('themeBtn').addEventListener('click', function () {
+    var t = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+    document.documentElement.dataset.theme = t;
+    try { localStorage.setItem('niseko2027-theme', t); } catch (e) { /* 保存できなくても切り替えはできる */ }
+    themeLabel();
+  });
+  themeLabel();
 
   // ---------------------------------------------------------------- 起動
   api('ping').then(function (r) {
