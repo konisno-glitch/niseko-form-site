@@ -215,7 +215,7 @@
     // 移動：ニセコにいる日の便だけ出す
     var mv = r.famMove.filter(function (m) { return r.me.present.indexOf(m.day) >= 0; });
     $('famMove').innerHTML = mv.length ? '<span></span><span class="mh">料金</span><span class="mh">人数</span><span></span>' + mv.map(function (m) {
-      return '<label for="' + m.key + '">' + esc(m.label.replace(/^(行き|帰り) \S+ /, '$1 ')) + '<span class="s">' + esc(m.label.split(' ')[1] + ' ' + m.sub) + '</span></label><span class="fee">' + esc(m.fee) + '</span>' + cnt(m.key, a[m.key]) + '<span></span>';
+      return '<label for="' + m.key + '">' + esc(m.label) + '<span class="s">' + esc(m.sub) + '</span></label><span class="fee">' + esc(m.fee) + '</span>' + cnt(m.key, a[m.key]) + '<span></span>';
     }).join('') : '';
     $('famMove').hidden = !mv.length; $('famMoveNote').hidden = !mv.length;
     renderFamActs(a);
