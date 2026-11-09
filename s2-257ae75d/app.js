@@ -2,7 +2,9 @@
   'use strict';
   // 本番の画面（niseko-forum.github.io）以外はテスト版として動く（テスト用マスター・メールは事務局だけ）
   var ENV = location.hostname === 'niseko-forum.github.io' ? '' : 'test';
-  var API = 'https://script.google.com/macros/s/AKfycbw7_X7ussUPrxCZHx4gi3j-L-bxQcfNYPnGswowTk_kU9P81EXiEHn999GnzwYu861C/exec';
+  // テスト版と本番は、同じ GAS の別のデプロイを使う。テスト版で直したものは、小西さんの OK が出るまで本番のデプロイに出さない（2026-11-09 小西さん指示）
+  var API = ENV === 'test' ? 'https://script.google.com/macros/s/AKfycbwSmmOdIQG3asMQMzBhvqS7o-rC7HumW1fL4gCjS_BqGeSgJgC9MtLbYJVQCGf-gfL-/exec'
+    : 'https://script.google.com/macros/s/AKfycbw7_X7ussUPrxCZHx4gi3j-L-bxQcfNYPnGswowTk_kU9P81EXiEHn999GnzwYu861C/exec';
   var K = 'ATYSbKZLx7bkAPnDWDOg-MizwHodtzu5';
   var SKEY = 'niseko2027-s2';
   var $ = function (id) { return document.getElementById(id); };
@@ -203,13 +205,23 @@
     $('famAllergyBody').value = a.famAllergyBody || ''; $('allergyBox').hidden = a.famAllergy !== 'ある';
     document.querySelectorAll('input[name=famAllergy]').forEach(function (i) { i.addEventListener('change', function () { $('allergyBox').hidden = i.value !== 'ある'; }); });
     // 食事会ごとに、人数とそのうち未就学児の人数（2026-10-28 小西さん指摘）
-    var sel = function (id, v) { return '<select id="' + id + '" aria-label="' + id + '">' + [0, 1, 2, 3, 4].map(function (n) { return '<option value="' + n + '"' + (String(v || 0) === String(n) ? ' selected' : '') + '>' + n + '名</option>'; }).join('') + '</select>'; };
-    $('famMeals').innerHTML = '<span></span><span class="mh">人数</span><span class="mh">うち未就学児</span>' + r.famMeals.map(function (m) {
-      return '<label for="' + m.key + '">' + esc(m.label) + '</label>' + sel(m.key, a[m.key]) + (m.kid ? sel(m.kid, a[m.kid]) : '<span class="muted">―</span>');
+    // 料金は人数のすぐ左に小さく出す（2026-11-09 小西さん指示）
+    var yen = function (v) { return Number(v).toLocaleString('ja-JP') + '円'; };
+    $('famN').innerHTML = r.famN.map(function (v) { return '<option' + (v === a.famN ? ' selected' : '') + '>' + esc(v) + '</option>'; }).join('');
+    $('famMeals').innerHTML = '<span></span><span class="mh">料金（税込）</span><span class="mh">人数</span><span class="mh">うち未就学児<br>（' + yen(r.kidFee) + '）</span>' + r.famMeals.map(function (m) {
+      return '<label for="' + m.key + '">' + esc(m.label) + '</label><span class="fee">' + (m.fee ? yen(m.fee) : 'その場で各自') + '</span>' + cnt(m.key, a[m.key]) + (m.kid ? cnt(m.kid, a[m.kid], m.label + 'の未就学児') : '<span class="muted">―</span>');
     }).join('');
+    $('famMealNote').textContent = r.famMealNote;
+    // 移動：ニセコにいる日の便だけ出す
+    var mv = r.famMove.filter(function (m) { return r.me.present.indexOf(m.day) >= 0; });
+    $('famMove').innerHTML = mv.length ? '<span></span><span class="mh">料金</span><span class="mh">人数</span><span></span>' + mv.map(function (m) {
+      return '<label for="' + m.key + '">' + esc(m.label) + '<span class="s">' + esc(m.sub) + '</span></label><span class="fee">' + esc(m.fee) + '</span>' + cnt(m.key, a[m.key]) + '<span></span>';
+    }).join('') : '';
+    $('famMove').hidden = !mv.length; $('famMoveNote').hidden = !mv.length;
+    renderFamActs(a);
     radios('o-sex', 'sex', ['男性', '女性'], a.sex);
     document.querySelectorAll('input[name=fam]').forEach(function (i) { i.checked = i.value === a.fam; });
-    $('photo').checked = !!a.photo; $('billTo').value = a.billTo || ''; $('billName').value = a.billName || ''; $('payer').value = a.payer || ''; $('famN').value = a.famN || '1名'; $('famWish').value = a.famWish || ''; $('memo').value = a.memo || ''; $('allergy').value = a.allergy || ''; $('tel').value = a.tel || '';
+    $('photo').checked = !!a.photo; $('billTo').value = a.billTo || ''; $('billName').value = a.billName || ''; $('payer').value = a.payer || '';  $('famWish').value = a.famWish || ''; $('memo').value = a.memo || ''; $('allergy').value = a.allergy || ''; $('tel').value = a.tel || '';
     $('famBox').hidden = a.fam !== 'yes';
     $('mailList').innerHTML = r.addresses.map(function (x) { return '<li><span class="addr">' + esc(x.masked) + '</span>' + (x.role ? '（' + esc(x.role === '本人' ? 'ご本人' : '秘書・ご担当者') + '）' : '') + '</li>'; }).join('');
     var hasSelf = r.addresses.some(function (x) { return x.role === '本人'; });
@@ -219,6 +231,42 @@
     skiRule();
   }
 
+  // 人数の選択（0〜9名）
+  function cnt(id, v, label) { return '<select id="' + id + '" class="cnt" aria-label="' + esc(label || id) + '">' + [0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (n) { return '<option value="' + n + '"' + (String(v || 0) === String(n) ? ' selected' : '') + '>' + n + '名</option>'; }).join('') + '</select>'; }
+  // 同伴者のアクティビティ：日ごとに「アクティビティ・料金・人数」の行（2026-11-09 白井さん依頼）
+  function famActOpts(dk) { return st.me.acts.filter(function (x) { return (!x.days || x.days.indexOf(dk) >= 0) && x.id !== 'free' && x.id !== 'bc'; }); }
+  function famActRow(dk, i, cur) {
+    var opts = famActOpts(dk), x = opts.filter(function (o) { return o.id === (cur && cur.id); })[0];
+    return '<div class="fa-row" data-day="' + dk + '"><select class="fa-act" aria-label="アクティビティ"><option value="">参加しない</option>' + opts.map(function (o) {
+      return '<option value="' + o.id + '"' + (x && x.id === o.id ? ' selected' : '') + '>' + esc(o.s || o.t) + '</option>';
+    }).join('') + '</select><span class="fee">' + esc(x ? (x.famFee || x.fee || '') : '') + '</span>' + cnt('fa_' + dk + '_' + i, cur && cur.n, 'アクティビティの人数') + '</div>';
+  }
+  function renderFamActs(a) {
+    var r = st.me, box = $('famActs');
+    box.innerHTML = r.me.days.map(function (dk) {
+      var d = r.dayDefs.filter(function (x) { return x.key === dk; })[0], rows = (a['fa_' + dk] || []).slice(0, r.famActMax);
+      if (!rows.length) rows = [null];
+      return '<div class="fa-day" id="fa-' + dk + '"><span class="fa-h">' + esc(d.label) + '</span><div class="fa-rows">' + rows.map(function (x, i) { return famActRow(dk, i, x); }).join('') + '</div>' +
+        '<button type="button" class="link fa-add" data-day="' + dk + '"' + (rows.length >= r.famActMax ? ' hidden' : '') + '>＋ 別のアクティビティを追加</button></div>';
+    }).join('');
+    box.hidden = !r.me.days.length;
+    box.querySelectorAll('.fa-add').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+        var dk = btn.dataset.day, rows = $('fa-' + dk).querySelector('.fa-rows'), i = rows.children.length;
+        rows.insertAdjacentHTML('beforeend', famActRow(dk, i, null));
+        if (i + 1 >= st.me.famActMax) btn.hidden = true;
+      });
+    });
+    box.addEventListener('change', function (e) {
+      if (!e.target.classList.contains('fa-act')) return;
+      var x = act(e.target.value); e.target.parentNode.querySelector('.fee').textContent = x ? (x.famFee || x.fee || '') : '';
+      if (x) { var c = e.target.parentNode.querySelector('select.cnt'); if (c.value === '0') c.value = '1'; }
+    });
+  }
+  function famActsValue(dk) {
+    var box = $('fa-' + dk); if (!box) return [];
+    return Array.prototype.map.call(box.querySelectorAll('.fa-row'), function (row) { return { id: row.querySelector('.fa-act').value, n: Number(row.querySelector('select.cnt').value) }; }).filter(function (x) { return x.id && x.n; });
+  }
   function openHotel() { $('hotelBox').hidden = false; $('hotelOpen').hidden = true; $('hotelBox').scrollIntoView({ behavior: 'smooth', block: 'center' }); $('hotelBody').focus({ preventScroll: true }); }
   $('hotelOpen').addEventListener('click', openHotel);
   $('hotelCancel').addEventListener('click', function () { $('hotelBox').hidden = true; $('hotelOpen').hidden = false; });
@@ -238,7 +286,7 @@
   var GO_NOTE = { '貸切バス': '新千歳空港 11:15発（ホテル14:00着）。乗車費は片道6,000円（税別）', '自前': 'ご自身で手配' };
   function backNote(v) {
     if (v === '貸切バス') return 'ホテル10:00発。乗車費は片道6,000円（税別）';
-    if (v.indexOf('遅い便') === 0) return 'ホテル14:00発。割り勘で1人10,000〜30,000円程度（検討中）';
+    if (v.indexOf('遅い便') === 0) return 'ホテル14:00発。' + st.me.taxiNote;
     return v === '自前' ? 'ご自身で手配' : '';
   }
   // 行き・帰りの欄：いまの状態と、選択肢（全部見せる。「変更する」で隠すと、帰りの午後の便が無くなったように見えた・2026-10-31 小西さん指摘）
@@ -330,7 +378,8 @@
       html += '<div class="q lunch" id="lb-' + dk + '" hidden><span class="ql">お昼だけ合流（' + esc(d.label) + '）</span><p class="muted">' + esc(r.lunchNote) + '</p><div class="opts" role="radiogroup" aria-label="' + esc(d.label) + 'のランチ">' +
         '<label class="opt"><input type="radio" name="' + dk + '_l" value=""' + (!lv ? ' checked' : '') + '><span class="t">参加しない</span></label>';
       lk.forEach(function (k) {
-        html += '<label class="opt"><input type="radio" name="' + dk + '_l" value="' + k + '"' + (lv === k ? ' checked' : '') + '><span class="t">' + esc(r.pools[k].t) + '</span></label>';
+        var pl = r.pools[k];
+        html += '<label class="opt"><input type="radio" name="' + dk + '_l" value="' + k + '"' + (lv === k ? ' checked' : '') + '><span class="t">' + esc(pl.lt ? 'ランチのみ参加　' + pl.lt : pl.t) + (pl.fee ? '<span class="s">' + esc(pl.fee) + '</span>' : '') + '</span></label>';
       });
       html += '</div></div>';
     }
@@ -391,6 +440,8 @@
     ['kind', 'level', 'sex', 'fam', 'famAllergy', 'avalanche', 'nijikai', 'alcohol'].forEach(function (n) { var c = document.querySelector('input[name=' + n + ']:checked'); ans[n] = c ? c.value : ''; });
     if ($('secC').hidden) { ans.kind = ans.level = ans.sex = ''; }
     r.famMeals.forEach(function (m) { ans[m.key] = $(m.key).value; if (m.kid) ans[m.kid] = $(m.kid).value; });
+    r.famMove.forEach(function (m) { var el = $(m.key); ans[m.key] = el ? el.value : '0'; });
+    r.me.days.forEach(function (d) { ans['fa_' + d] = famActsValue(d); });
     if ($('avBox').hidden) ans.avalanche = '';
     ans.photo = $('photo').checked; ans.billTo = $('billTo').value.trim(); ans.billName = $('billName').value.trim(); ans.payer = $('payer').value.trim(); ans.famAllergyBody = $('famAllergyBody').value; ans.famN = $('famN').value; ans.famWish = $('famWish').value; ans.memo = $('memo').value; ans.allergy = $('allergy').value; ans.tel = $('tel').value.trim();
     var add = $('addBox').hidden ? '' : $('addMail').value.trim();
