@@ -55,7 +55,10 @@ textarea{min-height:84px;resize:vertical}
 .fa-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px 10px;align-items:center;margin:4px 0}
 .fa-row select.fa-act{width:100%;min-width:0}
 .fa-add{font-size:.88rem;margin-top:2px}
-select.cnt{width:auto}
+select.cnt{width:4.4em;padding:6px 4px;font-size:.95rem}
+.meals{grid-template-columns:minmax(0,1fr) auto auto auto}
+.meals .mh{text-align:center;line-height:1.25}
+.meals label{line-height:1.35}
 .meals .mh{font-size:12px;color:#5b6475}
 .q.lunch{border-top:1px dashed #c9d1dd;padding-top:10px;margin-top:10px}
 .meals select{width:auto}
