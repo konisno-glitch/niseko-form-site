@@ -368,7 +368,7 @@
       // 最初は申し込み済みのものも含めて全部閉じておく（一覧で見渡せるように・2026-11-08 小西さん指摘）
       html += '<label class="opt act' + (full ? ' wait' : '') + '"><input type="radio" name="' + dk + '" value="' + x.id + '"' + (on ? ' checked' : '') + '>' +
         '<span class="t"><span class="name"><span>' + esc(x.t) + '</span>' + '<span class="left" data-base="' + esc(stat) + '">' + esc(stat) + '</span>' + '</span>' +
-        ((x.info.length || lim) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + (x.min ? x.min + '〜' : '') + x.cap + '名</dd>' : '') + (x.pool && r.pools[x.pool].cap ? '<dt>お店の席</dt><dd>' + esc(r.pools[x.pool].t) + ' ' + r.pools[x.pool].cap + '名（同じお店の組の合計）</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + (kv[2] ? '<a href="' + esc(kv[2]) + '" target="_blank" rel="noopener">' + esc(kv[1]) + '</a>' : esc(kv[1])) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
+        ((x.info.length || lim) ? '<dl>' + (x.cap ? '<dt>人数</dt><dd>' + (x.min ? x.min + '〜' : '') + x.cap + '名</dd>' : '') + (x.grpLabel ? '<dt>人数</dt><dd>' + esc(x.grpLabel) + '</dd>' : '') + (x.pool && r.pools[x.pool].cap ? '<dt>お店の席</dt><dd>' + esc(r.pools[x.pool].t) + ' ' + r.pools[x.pool].cap + '名（同じお店の組の合計）</dd>' : '') + x.info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + (kv[2] ? '<a href="' + esc(kv[2]) + '" target="_blank" rel="noopener">' + esc(kv[1]) + '</a>' : esc(kv[1])) + '</dd>'; }).join('') + '</dl>' : '') + '</span></label>';
     });
     html += '</div>';
     // キャンセル待ちを選んだときだけ、空きが出なかったときの過ごし方を選んでもらう
@@ -401,11 +401,12 @@
     return leftOf(dk, x) <= 0 && held !== x.id;
   }
   function acts(dk) { return st.me.acts.filter(function (x) { return !x.days || x.days.indexOf(dk) >= 0; }); }
-  function limited(x) { return !!(x.cap || (x.pool && st.me.pools[x.pool].cap)); }
+  function limited(x) { return !!(x.cap || x.grpCap || (x.pool && st.me.pools[x.pool].cap)); }
   // お店の席はアクティビティの参加者だけで数える（ランチだけの方より優先）
   function leftOf(dk, x) {
     var t = st.me.taken[dk] || {}, out = null;
     if (x.cap) out = x.cap - (t[x.id] || 0);
+    if (x.grpCap) { var g = x.grpCap - (t['grp:' + x.grp] || 0); out = out === null ? g : Math.min(out, g); }
     var p = x.pool && st.me.pools[x.pool];
     if (p && p.cap) { var l = p.cap - (t['pool:' + x.pool] || 0); out = out === null ? l : Math.min(out, l); }
     return out;
