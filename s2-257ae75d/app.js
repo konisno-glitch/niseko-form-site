@@ -342,6 +342,13 @@
         });
       });
     });
+    // ランチのみ参加は1日1つ（チェックを付けると、同じ日のほかのチェックは外れる）。選んだものは詳しい内容を開く
+    box.querySelectorAll('.lunch input[type=checkbox]').forEach(function (i) {
+      i.addEventListener('change', function () {
+        if (i.checked) box.querySelectorAll('input[name="' + i.name + '"]').forEach(function (o) { if (o !== i) o.checked = false; });
+        box.querySelectorAll('input[name="' + i.name + '"]').forEach(function (o) { o.closest('.opt').classList.toggle('open', o.checked); });
+      });
+    });
     box.querySelectorAll('[data-hotel]').forEach(function (b) { b.hidden = me.hold; b.addEventListener('click', openHotel); });
   }
 
@@ -372,14 +379,16 @@
       html += '<label class="opt"><input type="radio" name="' + dk + '_f" value="' + x.id + '"' + (fbVal === x.id ? ' checked' : '') + '><span class="t">' + esc(x.t) + '</span></label>';
     });
     html += '</div></div>';
-    // お昼だけ合流（スキー・スノボなどを選んだときだけ出す）（2026-10-27 白井さん）。席は数えない（アクティビティの参加者を優先し、空きがあれば入る・2026-10-31 小西さん指示）
+    // ランチのみ参加：シートの「ランチのみ参加」の中身を全部載せ、いつも出しておく。班で滑る・自分たちで滑る・仕事などと一緒に選べる（1日1つ）（2026-11-10 白井さん）
     var lk = r.lunch[dk] || [], lv = a[dk + '_l'] || '';
     if (lk.length) {
-      html += '<div class="q lunch" id="lb-' + dk + '" hidden><span class="ql">お昼だけ合流（' + esc(d.label) + '）</span><p class="muted">' + esc(r.lunchNote) + '</p><div class="opts" role="radiogroup" aria-label="' + esc(d.label) + 'のランチ">' +
-        '<label class="opt"><input type="radio" name="' + dk + '_l" value=""' + (!lv ? ' checked' : '') + '><span class="t">参加しない</span></label>';
+      html += '<div class="q lunch" id="lb-' + dk + '"><span class="ql">ランチのみ参加（' + esc(d.label) + '）</span><p class="muted">' + esc(r.lunchNote) + '</p>' +
+        '<p class="muted lunch-off" hidden>「班で滑る」「自分たちで滑る・自分で過ごす・仕事など」を選んだ日に選べます（昼食付きのアクティビティ・バックカントリーの日は選べません）。</p><div class="opts" role="group" aria-label="' + esc(d.label) + 'のランチのみ参加">';
       lk.forEach(function (k) {
-        var pl = r.pools[k];
-        html += '<label class="opt"><input type="radio" name="' + dk + '_l" value="' + k + '"' + (lv === k ? ' checked' : '') + '><span class="t">' + esc(pl.lt ? 'ランチのみ参加　' + pl.lt : pl.t) + (pl.fee ? '<span class="s">' + esc(pl.fee) + '</span>' : '') + '</span></label>';
+        var pl = r.pools[k], info = [['お店', pl.t + '（食べログ）', pl.url], ['料金', pl.fee], ['時間', (pl.time || {})[dk] || ''], ['移動', pl.move ? pl.move + '。お店までの交通手段は、Goタクシーなどでご自身で手配してください' : ''], ['支払い', pl.pay], ['キャンセル', '1か月前から全額'], ['ご注意', 'アレルギーがあれば「E. その他」でお知らせください']].filter(function (kv) { return kv[1]; });
+        html += '<label class="opt act lunch-opt' + (lv === k ? ' open' : '') + '"><input type="checkbox" name="' + dk + '_l" value="' + k + '"' + (lv === k ? ' checked' : '') + '>' +
+          '<span class="t"><span class="name"><span>' + esc('ランチのみ参加　' + pl.lt) + '</span><span class="left">' + esc(pl.fee) + '</span></span><dl>' +
+          info.map(function (kv) { return '<dt>' + esc(kv[0]) + '</dt><dd>' + (kv[2] ? '<a href="' + esc(kv[2]) + '" target="_blank" rel="noopener">' + esc(kv[1]) + '</a>' : esc(kv[1])) + '</dd>'; }).join('') + '</dl></span></label>';
       });
       html += '</div></div>';
     }
@@ -419,7 +428,12 @@
       var fb = $('fb-' + d); if (fb) fb.hidden = !c.w;
       // お昼だけ合流は、スキー・スノボ（班・自分たち）と自分で過ごす日だけ出す
       var lb = $('lb-' + d);
-      if (lb) { lb.hidden = !(x && x.lunchOk); if (lb.hidden) { var none = lb.querySelector('input[value=""]'); if (none) none.checked = true; } }
+      if (lb) {
+        var ok = !!(x && x.lunchOk);
+        lb.querySelector('.lunch-off').hidden = ok;
+        lb.querySelectorAll('input').forEach(function (i) { i.disabled = !ok; if (!ok) { i.checked = false; i.closest('.opt').classList.remove('open'); } });
+        lb.classList.toggle('off', !ok);
+      }
       if ((x && x.ski) || (w && w.ski)) ski = true;
       if ((x && x.avalanche) || (w && w.avalanche)) bc = true;
     });
@@ -432,7 +446,7 @@
     var r = st.me, ans = {};
     r.me.days.forEach(function (d) {
       var c = choice(d); ans[d] = c.c; ans[d + '_w'] = c.w;
-      var lb = $('lb-' + d); ans[d + '_l'] = lb && !lb.hidden ? radio(d + '_l') : '';
+      ans[d + '_l'] = radio(d + '_l');
     });
     ans.go = radio('go'); ans.back = radio('back');
     var miss = r.me.days.filter(function (d) { return ans[d + '_w'] && !ans[d]; });
@@ -455,7 +469,7 @@
           var keep = {}; r.me.days.forEach(function (d) { var c = choice(d); keep[d] = c.w || c.c; });
           st.me.taken = res.taken;
           var a2 = Object.assign({}, st.me.answer || {});
-          r.me.days.forEach(function (d) { a2[d + '_w'] = ''; a2[d] = keep[d]; var lb = $('lb-' + d); a2[d + '_l'] = lb && !lb.hidden ? radio(d + '_l') : ''; });
+          r.me.days.forEach(function (d) { a2[d + '_w'] = ''; a2[d] = keep[d]; a2[d + '_l'] = radio(d + '_l'); });
           a2.nijikai = radio('nijikai'); st.me.me.first.go = radio('go') || st.me.me.first.go; st.me.me.first.back = radio('back') || st.me.me.first.back;
           renderDays(a2); skiRule();
         }

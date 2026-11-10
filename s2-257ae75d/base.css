@@ -130,3 +130,6 @@ input.code{font-size:1.4rem;letter-spacing:.3em;font-variant-numeric:tabular-num
 .block{border-left:3px solid var(--accent);padding-left:12px;display:flex;flex-direction:column;gap:14px}
 .opt.act .left.sel{font-weight:700}
 .opt.act .left{white-space:nowrap}
+
+.lunch.off .opt{opacity:.5;cursor:not-allowed}
+.lunch-opt .left{font-weight:400;color:var(--muted)}
