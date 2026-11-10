@@ -185,8 +185,6 @@
     $('meLead').textContent = f.answered ? '第1回でいただいたご回答です。' : '第1回のアンケートは、まだご回答いただいていません。';
     var rows = (f.answered ? [['日程', f.days], ['宿泊', f.stay || '—']] : []).concat([['ホテル', f.hotel]]);
     $('meDl').innerHTML = rows.map(function (x) { return '<dt>' + esc(x[0]) + '</dt><dd>' + esc(x[1]) + '</dd>'; }).join('');
-    // 経営フォーラムの事前アンケートに答えたか（回答済みなら日付、まだならリンク）（2026-11-10 小西さん指示）
-    if (me.forum) $('meDl').innerHTML += '<dt>経営フォーラム<br>事前アンケート</dt><dd>' + (me.forum.done ? esc(me.forum.done.replace('回答済', '回答済み')) : 'まだお答えいただいていません（' + esc(me.forum.deadline) + 'まで）' + (me.forum.url ? '<br><a href="' + esc(me.forum.url) + '" target="_blank" rel="noopener">事前アンケートに答える（約3分）</a>' : '')) + '</dd>';
     // 第1回のご回答とホテルの予約の食い違いは赤字で（文はサーバーが決まった文で作る）
     $('warnBox').hidden = !f.warns.length;
     $('warnList').innerHTML = f.warns.map(function (w) { return '<li>' + esc(w) + '</li>'; }).join('');
