@@ -10,7 +10,7 @@
   var SKEY = 'niseko2027-s2';
   var $ = function (id) { return document.getElementById(id); };
   var esc = function (s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); };
-  var st = { cid: '', name: '', addresses: [], codeId: '', sendArgs: null, me: null, timer: 0, photo: '', hasPhoto: false };
+  var st = { cid: '', name: '', addresses: [], codeId: '', sendArgs: null, me: null, timer: 0, photo: '', thumb: '', hasPhoto: false };
 
   function store(v) { try { if (v) localStorage.setItem(SKEY, v); else localStorage.removeItem(SKEY); } catch (e) { /* 保存できない端末でも動く */ } }
   function stored() { try { return localStorage.getItem(SKEY) || ''; } catch (e) { return ''; } }
@@ -182,7 +182,9 @@
       $('meName').textContent = r.me.name + ' 様' + (r.me.company ? '（' + r.me.company + '）' : '');
       $('introText').value = r.intro || ''; count();
       $('photo').value = '';
-      $('face').hidden = true; $('faceEmpty').hidden = false;
+      st.thumb = '';
+      $('face').hidden = !r.thumb; $('faceEmpty').hidden = !!r.thumb;
+      if (r.thumb) $('face').src = r.thumb;
       $('faceEmpty').textContent = r.hasPhoto ? '登録済み' : '写真なし';
       $('photoNote').textContent = r.hasPhoto ? 'ご登録の写真があります。変えるときだけ、新しい写真を選んでください。' : 'お顔がはっきり写った写真を1枚お選びください。';
       err('saveErr', '');
@@ -202,7 +204,9 @@
         var q = 0.85, d = c.toDataURL('image/jpeg', q);
         while (d.length > 340000 && q > 0.4) { q -= 0.1; d = c.toDataURL('image/jpeg', q); }
         if (d.length > 340000) return reject(new Error('big'));
-        resolve(d);
+        var k2 = Math.min(1, 240 / Math.max(w, h)), c2 = document.createElement('canvas'); c2.width = Math.round(w * k2); c2.height = Math.round(h * k2);
+        var g2 = c2.getContext('2d'); g2.fillStyle = '#fff'; g2.fillRect(0, 0, c2.width, c2.height); g2.drawImage(img, 0, 0, c2.width, c2.height);
+        resolve({ d: d, t: c2.toDataURL('image/jpeg', 0.7) });
       };
       img.onerror = function () { URL.revokeObjectURL(url); reject(new Error('read')); };
       img.src = url;
@@ -212,8 +216,8 @@
     var f = $('photo').files && $('photo').files[0];
     if (!f) return;
     err('saveErr', '');
-    shrink(f).then(function (d) {
-      st.photo = d; $('face').src = d; $('face').hidden = false; $('faceEmpty').hidden = true;
+    shrink(f).then(function (x) {
+      st.photo = x.d; st.thumb = x.t; $('face').src = x.d; $('face').hidden = false; $('faceEmpty').hidden = true;
     }).catch(function () {
       st.photo = ''; $('photo').value = '';
       err('saveErr', 'この写真は読み込めませんでした。別の写真（JPEG・PNG など）でお試しください');
@@ -226,12 +230,13 @@
     if (!text) return err('saveErr', '自己紹介を入れてください');
     if (len(text) > MAX) return err('saveErr', '自己紹介は' + MAX + '字以内でお願いします（いま' + len(text) + '字）');
     err('saveErr', ''); busy($('save'), true);
-    api('introSave', { s: st.s, text: text, photo: st.photo }).then(function (r) {
+    api('introSave', { s: st.s, text: text, photo: st.photo, thumb: st.thumb }).then(function (r) {
       busy($('save'), false);
       if (!r.ok) { if (r.error === 'session') { store(''); show('stName'); return err('nameErr', r.message); } return err('saveErr', r.message); }
       if (st.photo) st.hasPhoto = true;
       $('doneText').textContent = text;
-      $('doneFace').hidden = !st.photo; if (st.photo) $('doneFace').src = st.photo;
+      var shown = st.photo || ($('face').hidden ? '' : $('face').src);
+      $('doneFace').hidden = !shown; if (shown) $('doneFace').src = shown;
       st.me.intro = text;
       show('stDone');
     });
