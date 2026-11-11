@@ -181,7 +181,7 @@
     return api('introMe', { s: s }).then(function (r) {
       if (!r.ok) { store(''); show('stName'); if (r.error !== 'session') err('nameErr', r.message); return; }
       st.me = r; MAX = r.max || MAX; st.photo = ''; st.hasPhoto = r.hasPhoto;
-      $('meName').textContent = r.me.name + ' 様' + (r.me.company ? '（' + r.me.company + '）' : '');
+      $('meName').textContent = r.me.name + ' 様';
       $('introText').value = r.intro || ''; count();
       $('company').value = r.company || ''; $('title').value = r.title || '';
       $('prefillNote').hidden = !(r.company || r.title) || !!r.industry;
