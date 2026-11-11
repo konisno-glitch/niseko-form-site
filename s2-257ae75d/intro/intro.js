@@ -173,6 +173,8 @@
     $('count').classList.toggle('over', n > MAX);
   }
   $('introText').addEventListener('input', count);
+  function syncInd() { $('industryOther').hidden = $('industry').value !== 'その他'; }
+  $('industry').addEventListener('change', function () { syncInd(); if (!$('industryOther').hidden) $('industryOther').focus(); });
 
   function loadIntro(s) {
     st.s = s; show('loading');
@@ -181,6 +183,12 @@
       st.me = r; MAX = r.max || MAX; st.photo = ''; st.hasPhoto = r.hasPhoto;
       $('meName').textContent = r.me.name + ' 様' + (r.me.company ? '（' + r.me.company + '）' : '');
       $('introText').value = r.intro || ''; count();
+      $('company').value = r.company || ''; $('title').value = r.title || '';
+      $('prefillNote').hidden = !(r.company || r.title) || !!r.industry;
+      var ind = r.industry || '', other = '';
+      if (ind.indexOf('その他：') === 0) { other = ind.slice(4); ind = 'その他'; }
+      $('industry').innerHTML = '<option value="">選んでください</option>' + r.industries.map(function (x) { return '<option' + (x === ind ? ' selected' : '') + '>' + esc(x) + '</option>'; }).join('');
+      $('industryOther').value = other; syncInd();
       $('photo').value = '';
       st.thumb = '';
       $('face').hidden = !r.thumb; $('faceEmpty').hidden = !!r.thumb;
@@ -226,15 +234,21 @@
 
   $('save').addEventListener('click', function () {
     var text = $('introText').value.trim();
+    var company = $('company').value.trim(), title = $('title').value.trim(), ind = $('industry').value, other = $('industryOther').value.trim();
+    if (!company) return err('saveErr', '会社名を入れてください');
+    if (!title) return err('saveErr', '役職を入れてください');
+    if (!ind) return err('saveErr', '業種を選んでください');
+    if (ind === 'その他' && !other) return err('saveErr', '「その他」の業種を入れてください');
     if (!st.photo && !st.hasPhoto) return err('saveErr', 'お顔の写真を選んでください');
     if (!text) return err('saveErr', '自己紹介を入れてください');
     if (len(text) > MAX) return err('saveErr', '自己紹介は' + MAX + '字以内でお願いします（いま' + len(text) + '字）');
     err('saveErr', ''); busy($('save'), true);
-    api('introSave', { s: st.s, text: text, photo: st.photo, thumb: st.thumb }).then(function (r) {
+    api('introSave', { s: st.s, text: text, photo: st.photo, thumb: st.thumb, company: company, title: title, industry: ind, industryOther: other }).then(function (r) {
       busy($('save'), false);
       if (!r.ok) { if (r.error === 'session') { store(''); show('stName'); return err('nameErr', r.message); } return err('saveErr', r.message); }
       if (st.photo) st.hasPhoto = true;
       $('doneText').textContent = text;
+      $('doneWho').textContent = company + '　' + title + '（' + (ind === 'その他' ? other : ind) + '）';
       var shown = st.photo || ($('face').hidden ? '' : $('face').src);
       $('doneFace').hidden = !shown; if (shown) $('doneFace').src = shown;
       st.me.intro = text;

@@ -6,7 +6,7 @@
 <meta name="robots" content="noindex,nofollow">
 <title>ニセコ会議2027 自己紹介</title>
 <meta property="og:title" content="ニセコ会議2027 自己紹介">
-<meta property="og:description" content="お顔の写真と、200字以内の自己紹介をお願いします。">
+<meta property="og:description" content="参加者しおり等で使う、写真と自己紹介をお願いします。">
 <meta property="og:type" content="website">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=Zen+Kaku+Gothic+New:wght@700;900&display=swap">
@@ -27,7 +27,7 @@ input[type=file]{font:inherit;font-size:.9rem}
 <span class="badge" id="testBadge" hidden>テスト版（本番とは別のデータです。登録は本番には残りません。メールは事務局の皆さまのアドレスにだけ届きます）</span>
 <header class="head">
   <h1>【ニセコ会議2027】自己紹介</h1>
-  <p>お顔の写真と、200字以内の自己紹介をお願いします。</p>
+  <p>参加者しおり等で使う、会社名・役職・業種と、写真・自己紹介（200字以内）をお願いします。</p>
   <div class="facts">
     <span>締切 <b>11/20（金）</b></span>
   </div>
@@ -108,7 +108,21 @@ input[type=file]{font:inherit;font-size:.9rem}
 <section class="sec stage" id="stForm" hidden>
   <h2 id="meName"></h2>
   <div class="q">
-    <span class="ql">お顔の写真<span class="req">*</span></span>
+    <label for="company">会社名<span class="req">*</span></label>
+    <input type="text" id="company" autocomplete="organization" maxlength="60">
+  </div>
+  <div class="q">
+    <label for="title">役職<span class="req">*</span></label>
+    <input type="text" id="title" autocomplete="organization-title" maxlength="40">
+  </div>
+  <p class="muted" id="prefillNote" hidden>会社名と役職は、参加アンケートのご回答を入れています。変わっていれば直してください。</p>
+  <div class="q">
+    <label for="industry">業種<span class="req">*</span></label>
+    <select id="industry"></select>
+    <input type="text" id="industryOther" placeholder="業種をご記入ください" maxlength="30" hidden>
+  </div>
+  <div class="q">
+    <span class="ql">写真<span class="req">*</span></span>
     <div class="pick">
       <img class="face" id="face" alt="選んだ写真" hidden>
       <div class="face empty" id="faceEmpty">写真なし</div>
@@ -135,7 +149,10 @@ input[type=file]{font:inherit;font-size:.9rem}
   <h2>ご登録ありがとうございました</h2>
   <div class="pick">
     <img class="face" id="doneFace" alt="ご登録の写真" hidden>
-    <p id="doneText" style="flex:1;min-width:12em;white-space:pre-wrap"></p>
+    <div style="flex:1;min-width:12em;display:flex;flex-direction:column;gap:6px">
+      <strong id="doneWho"></strong>
+      <p id="doneText" style="white-space:pre-wrap"></p>
+    </div>
   </div>
   <p class="muted">内容を変えたいときは、締切まで、同じリンクから開いて変更できます。</p>
   <div class="row"><button class="btn sub" type="button" id="edit">内容を変える</button></div>
@@ -143,6 +160,6 @@ input[type=file]{font:inherit;font-size:.9rem}
 
 <p class="muted" id="loading">読み込んでいます…</p>
 </div>
-<script src="intro.js?v=2"></script>
+<script src="intro.js?v=3"></script>
 </body>
 </html>
